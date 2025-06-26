@@ -24,7 +24,7 @@ function UserCourses({ userId }) {
         userId: 1,
         courseId: 1,
         proficiency: 3,
-        course: { id: 1, name: "Introduction to Computer Science", description: "Fundamentals of CS" }
+        course: { id: 1, name: "Introduction to Computer Science", description: "fundamentals of CS" }
       },
       {
         id: 2,
