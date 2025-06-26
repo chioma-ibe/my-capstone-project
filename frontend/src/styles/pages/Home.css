@@ -1,0 +1,80 @@
+.home-container {
+  text-align: center;
+  padding: 1rem 0;
+}
+
+.home-description {
+  font-size: 1.2rem;
+  margin-bottom: 2rem;
+  color: #555;
+}
+
+.single-user-container {
+  display: flex;
+  justify-content: center;
+  margin-top: 2rem;
+}
+
+.user-card {
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  max-width: 500px;
+  overflow: hidden;
+  padding: 1.5rem;
+}
+
+.user-info {
+  margin-bottom: 1.5rem;
+}
+
+.user-bio {
+  color: #555;
+  margin-bottom: 1rem;
+}
+
+.user-courses {
+  text-align: left;
+  margin-top: 1rem;
+}
+
+.user-courses h3 {
+  font-size: 1.1rem;
+  margin-bottom: 0.5rem;
+}
+
+.user-courses ul {
+  padding-left: 1.5rem;
+}
+
+.user-courses li {
+  margin-bottom: 0.3rem;
+  list-style-type: disc;
+}
+
+.card-actions {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 1.5rem;
+}
+
+.skip-button {
+  background-color: #e74c3c;
+  color: white;
+  padding: 0.7rem 2rem;
+}
+
+.skip-button:hover {
+  background-color: #c0392b;
+}
+
+.match-button {
+  background-color: #2ecc71;
+  color: white;
+  padding: 0.7rem 2rem;
+}
+
+.match-button:hover {
+  background-color: #27ae60;
+}

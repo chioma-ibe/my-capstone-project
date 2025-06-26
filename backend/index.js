@@ -1,8 +1,15 @@
-const express = require('express')
-const app = express()
+const express = require('express');
+const cors = require('cors');
+const app = express();
+const { PrismaClient } = require('./generated/prisma');
+const prisma = new PrismaClient();
 
-const PORT = 3000
+const PORT = 3000;
 
-app.listen(PORT, () => {
-console.log(`Server is running on http://localhost:${PORT}`)
-})
+app.use(cors({
+  origin: ['http://localhost:5173', 'http://localhost:5174'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  credentials: true
+}));
+
+ app.get('/', (_, res) => { res.json({ message: 'study buddy' }); });

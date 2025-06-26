@@ -1,0 +1,70 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id             Int          @id @default(autoincrement())
+  email          String       @unique
+  password       String
+  profilePhoto   String?
+  name           String
+  bio            String?
+  userCourses    UserCourse[]
+  matchesAsUser1 Match[]      @relation("User1Matches")
+  matchesAsUser2 Match[]      @relation("User2Matches")
+  calendar       Calendar?
+  ratings        Rating[]     @relation("UserRatings")
+  ratingsGiven   Rating[]     @relation("PartnerRatings")
+}
+
+model Course {
+  id          Int          @id @default(autoincrement())
+  name        String       @unique
+  description String?
+  userCourses UserCourse[]
+}
+
+model UserCourse {
+  id           Int       @id @default(autoincrement())
+  user         User      @relation(fields: [userId], references: [id])
+  userId       Int
+  course       Course    @relation(fields: [courseId], references: [id])
+  courseId     Int
+  proficiency  Int       @default(1)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@unique([userId, courseId])
+}
+
+model Match {
+  id         Int      @id @default(autoincrement())
+  user1      User     @relation("User1Matches", fields: [user1Id], references: [id])
+  user1Id    Int
+  user2      User     @relation("User2Matches", fields: [user2Id], references: [id])
+  user2Id    Int
+  matchedAt  DateTime @default(now())
+}
+
+model Calendar {
+  id       Int      @id @default(autoincrement())
+  user     User     @relation(fields: [userId], references: [id])
+  userId   Int      @unique
+  events   String
+}
+
+model Rating {
+  id         Int      @id @default(autoincrement())
+  user       User     @relation("UserRatings", fields: [userId], references: [id])
+  userId     Int
+  partner    User     @relation("PartnerRatings", fields: [partnerId], references: [id])
+  partnerId  Int
+  score      Int
+  comment    String?
+}
