@@ -25,6 +25,14 @@ function Navbar() {
             </Link>
           </li>
         </ul>
+        <div className="auth-links">
+          <Link to="/login" className="nav-link">
+            Login
+          </Link>
+          <Link to="/signup" className="nav-link">
+            Sign Up
+          </Link>
+        </div>
       </div>
     </nav>
   );

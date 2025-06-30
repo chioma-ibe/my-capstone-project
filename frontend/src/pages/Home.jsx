@@ -33,12 +33,10 @@ function Home() {
   const currentUser = users[currentUserIndex];
 
   const handleMatch = () => {
-    console.log(`Matched with user ${currentUser.id}`);
     goToNextUser();
   };
 
   const handleSkip = () => {
-    console.log(`Skipped user ${currentUser.id}`);
     goToNextUser();
   };
 
