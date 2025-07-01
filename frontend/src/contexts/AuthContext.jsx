@@ -49,11 +49,14 @@ export function FirebaseAuthProvider({ children }) {
   }
 
   useEffect(() => {
-    const unsubscribeAuth = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser);
+    const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        setUser(user);
+      } else {
+        setUser(null);
+      }
       setIsLoading(false);
     });
-
     return unsubscribeAuth;
   }, []);
 
