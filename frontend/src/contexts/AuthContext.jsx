@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { onAuthStateChanged, signInWithEmailAndPassword, signOut, createUserWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../firebase/firebase';
+import apiService from '../services/api';
 
 const AuthContext = createContext();
 
@@ -44,9 +45,20 @@ export function FirebaseAuthProvider({ children }) {
   }
 
   useEffect(() => {
-    const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
+    const unsubscribeAuth = onAuthStateChanged(auth, async (user) => {
       if (user) {
-        setUser(user);
+        try {
+          // Authenticate user with backend and get/create database record
+          await apiService.authenticateUser(
+            user.uid,
+            user.email,
+            user.displayName
+          );
+          setUser(user);
+        } catch (error) {
+          console.error('Failed to authenticate user with backend:', error);
+          setUser(user); // Still set user even if backend fails
+        }
       } else {
         setUser(null);
       }
