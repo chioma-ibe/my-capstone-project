@@ -1,7 +1,6 @@
 import { Link } from 'react-router-dom';
 
 function PrivateRoute() {
-  // Always show the "sign in" message since we have no auth
   return (
     <div style={{
       padding: '20px',

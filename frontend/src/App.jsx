@@ -1,4 +1,5 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { FirebaseAuthProvider } from './contexts/AuthContext';
 import Navbar from './components/layout/Navbar';
 import Home from './pages/Home';
 import Profile from './pages/Profile';
@@ -11,6 +12,7 @@ import './styles/app.css';
 function App() {
   return (
     <Router>
+      <FirebaseAuthProvider>
         <div className="app-container">
           <Navbar />
 
@@ -49,7 +51,8 @@ function App() {
             <p>Study Buddy "not finished yet: Coming soon" </p>
           </footer>
         </div>
-      </Router>
+      </FirebaseAuthProvider>
+    </Router>
   );
 }
 
