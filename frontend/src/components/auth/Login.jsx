@@ -1,18 +1,35 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../../contexts/AuthContext';
 import '../../styles/components/auth/Auth.css';
 
 function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  function handleSubmit(e) {
+  const { signInUser, authError, setAuthError } = useAuth();
+  const navigate = useNavigate();
+
+  async function handleSubmit(e) {
     e.preventDefault();
+    setAuthError('');
+
+    try {
+      await signInUser(email, password);
+      navigate('/');
+    } catch (error) {
+      setAuthError(error.message);
+    }
   }
 
   return (
     <div className="auth-container">
       <div className="auth-form-container">
         <h2>Login</h2>
+        {authError && (
+          <div className="error-message">
+            {authError}
+          </div>
+        )}
         <form onSubmit={handleSubmit}>
           <div className="form-group">
             <label htmlFor="email">Email</label>
