@@ -57,6 +57,7 @@ export function FirebaseAuthProvider({ children }) {
 
   const contextValue = {
     currentUser: user,
+    loading: isLoading,
     login: signInUser,
     signup: registerUser,
     logout: signOutUser,
