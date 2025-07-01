@@ -1,22 +1,44 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
-import '../../styles/components/auth/Auth.css';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../../contexts/AuthContext';
 
 function Signup() {
-  const [email, setEmail] = useState('');
-  const [name, setName] = useState('');
-  const [password, setPassword] = useState('');
-  const [passwordConfirm, setPasswordConfirm] = useState('');
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    password: '',
+    confirmPassword: ''
+  });
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+  const { signup } = useAuth();
+  const navigate = useNavigate();
 
-  function handleSubmit(e) {
+  const handleChange = (e) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value
+    });
+  };
+
+  async function handleSubmit(e) {
     e.preventDefault();
 
-    if (password !== passwordConfirm) {
+    if (formData.password !== formData.confirmPassword) {
       return setError('Passwords do not match');
     }
 
-    setError('');
+    try {
+      setError('');
+      setLoading(true);
+      await signup(formData.email, formData.password);
+      navigate('/');
+    } catch (error) {
+      console.error('Signup error:', error);
+      setError(error.message || 'Failed to create an account');
+    }
+
+    setLoading(false);
   }
 
   return (
@@ -30,8 +52,9 @@ function Signup() {
             <input
               type="text"
               id="name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
+              name="name"
+              value={formData.name}
+              onChange={handleChange}
               required
             />
           </div>
@@ -40,8 +63,9 @@ function Signup() {
             <input
               type="email"
               id="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              name="email"
+              value={formData.email}
+              onChange={handleChange}
               required
             />
           </div>
@@ -50,23 +74,25 @@ function Signup() {
             <input
               type="password"
               id="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              name="password"
+              value={formData.password}
+              onChange={handleChange}
               required
             />
           </div>
           <div className="form-group">
-            <label htmlFor="password-confirm">Confirm Password</label>
+            <label htmlFor="confirmPassword">Confirm Password</label>
             <input
               type="password"
-              id="password-confirm"
-              value={passwordConfirm}
-              onChange={(e) => setPasswordConfirm(e.target.value)}
+              id="confirmPassword"
+              name="confirmPassword"
+              value={formData.confirmPassword}
+              onChange={handleChange}
               required
             />
           </div>
-          <button type="submit" className="btn btn-primary">
-            Sign Up
+          <button type="submit" className="btn btn-primary" disabled={loading}>
+            {loading ? 'Creating Account...' : 'Sign Up'}
           </button>
         </form>
         <div className="auth-links">
