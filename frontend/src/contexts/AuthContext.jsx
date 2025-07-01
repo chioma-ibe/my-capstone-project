@@ -19,15 +19,33 @@ export function FirebaseAuthProvider({ children }) {
   const [authError, setAuthError] = useState('');
 
   async function registerUser(email, password) {
-    return createUserWithEmailAndPassword(auth, email, password);
+    try {
+      setAuthError('');
+      return await createUserWithEmailAndPassword(auth, email, password);
+    } catch (error) {
+      setAuthError(error.message);
+      throw error;
+    }
   }
 
   async function signInUser(email, password) {
-    return signInWithEmailAndPassword(auth, email, password);
+    try {
+      setAuthError('');
+      return await signInWithEmailAndPassword(auth, email, password);
+    } catch (error) {
+      setAuthError(error.message);
+      throw error;
+    }
   }
 
   async function signOutUser() {
-    return signOut(auth);
+    try {
+      setAuthError('');
+      return await signOut(auth);
+    } catch (error) {
+      setAuthError(error.message);
+      throw error;
+    }
   }
 
   useEffect(() => {
