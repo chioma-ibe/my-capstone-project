@@ -4,7 +4,6 @@ const { PrismaClient } = require('../generated/prisma');
 const router = express.Router();
 const prisma = new PrismaClient();
 
-// Create or get user by Firebase ID
 router.post('/firebase-auth', async (req, res) => {
   try {
     const { firebaseId, email, name } = req.body;
@@ -15,7 +14,6 @@ router.post('/firebase-auth', async (req, res) => {
       });
     }
 
-    // Check if user already exists
     let user = await prisma.user.findUnique({
       where: { firebaseId },
       include: {
@@ -28,13 +26,13 @@ router.post('/firebase-auth', async (req, res) => {
     });
 
     if (!user) {
-      // Create new user
+     
       user = await prisma.user.create({
         data: {
           firebaseId,
           email,
           name: name || email.split('@')[0],
-          password: '', // Empty since we're using Firebase auth
+          password: '', 
         },
         include: {
           userCourses: {

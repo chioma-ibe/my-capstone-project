@@ -30,7 +30,7 @@ class ApiService {
     }
   }
 
-  // User authentication with Firebase
+  
   async authenticateUser(firebaseId, email, name) {
     return this.request('/users/firebase-auth', {
       method: 'POST',

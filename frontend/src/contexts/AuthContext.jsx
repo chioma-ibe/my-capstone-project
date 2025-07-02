@@ -48,7 +48,6 @@ export function FirebaseAuthProvider({ children }) {
     const unsubscribeAuth = onAuthStateChanged(auth, async (user) => {
       if (user) {
         try {
-          // Authenticate user with backend and get/create database record
           await apiService.authenticateUser(
             user.uid,
             user.email,
@@ -57,7 +56,7 @@ export function FirebaseAuthProvider({ children }) {
           setUser(user);
         } catch (error) {
           console.error('Failed to authenticate user with backend:', error);
-          setUser(user); // Still set user even if backend fails
+          setUser(user); 
         }
       } else {
         setUser(null);
