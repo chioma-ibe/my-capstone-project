@@ -30,11 +30,39 @@ class ApiService {
     }
   }
 
-  
+
   async authenticateUser(firebaseId, email, name) {
     return this.request('/users/firebase-auth', {
       method: 'POST',
       body: { firebaseId, email, name },
+    });
+  }
+
+  async getCourses() {
+    return this.request('/courses');
+  }
+
+  async getUserCourses(userId) {
+    return this.request(`/user-courses/${userId}`);
+  }
+
+  async addUserCourse(userId, courseId, proficiency = 1) {
+    return this.request('/user-courses', {
+      method: 'POST',
+      body: { userId, courseId, proficiency },
+    });
+  }
+
+  async updateUserCourseProficiency(userId, courseId, proficiency) {
+    return this.request(`/user-courses/${userId}/${courseId}`, {
+      method: 'PUT',
+      body: { proficiency },
+    });
+  }
+
+  async removeUserCourse(userId, courseId) {
+    return this.request(`/user-courses/${userId}/${courseId}`, {
+      method: 'DELETE',
     });
   }
 }

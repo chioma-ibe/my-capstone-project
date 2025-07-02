@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import apiService from '../services/api';
 import '../styles/components/CourseSelector.css';
 
 const proficiencyOptions = [
@@ -17,20 +18,24 @@ function CourseSelector({ userId, onCourseAdded }) {
   const [selectedProficiency, setSelectedProficiency] = useState(1);
 
   useEffect(() => {
-    const mockCourses = [
-      { id: 1, name: "Introduction to Computer Science" },
-      { id: 2, name: "Data Structures" },
-      { id: 3, name: "Algorithms" },
-      { id: 4, name: "Web Development" },
-      { id: 5, name: "Database Systems" },
-      { id: 6, name: "Machine Learning" },
-      { id: 7, name: "Operating Systems" }
-    ];
-    setCourses(mockCourses);
-    setLoading(false);
+    const fetchCourses = async () => {
+      try {
+        setLoading(true);
+        const coursesData = await apiService.getCourses();
+        setCourses(coursesData);
+        setError(null);
+      } catch (err) {
+        setError('Failed to load courses');
+        console.error('Error fetching courses:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCourses();
   }, []);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (!selectedCourse) {
@@ -38,20 +43,27 @@ function CourseSelector({ userId, onCourseAdded }) {
       return;
     }
 
+    try {
+      setError(null);
+      const addedCourse = await apiService.addUserCourse(
+        userId,
+        parseInt(selectedCourse),
+        parseInt(selectedProficiency)
+      );
 
-    const mockAddedCourse = {
-      id: Math.floor(Math.random() * 1000),
-      userId: userId,
-      courseId: parseInt(selectedCourse),
-      proficiency: selectedProficiency,
-      course: courses.find(c => c.id === parseInt(selectedCourse))
-    };
+      setSelectedCourse('');
+      setSelectedProficiency(1);
 
-    setSelectedCourse('');
-    setSelectedProficiency(1);
-
-    if (onCourseAdded) {
-      onCourseAdded(mockAddedCourse);
+      if (onCourseAdded) {
+        onCourseAdded(addedCourse);
+      }
+    } catch (err) {
+      if (err.message.includes('already enrolled')) {
+        setError('You are already enrolled in this course');
+      } else {
+        setError('Failed to add course');
+      }
+      console.error('Error adding course:', err);
     }
   };
 

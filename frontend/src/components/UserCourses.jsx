@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import apiService from '../services/api';
 import '../styles/components/UserCourses.css';
 
 const getProficiencyLabel = (level) => {
@@ -15,38 +16,37 @@ const getProficiencyLabel = (level) => {
 function UserCourses({ userId }) {
   const [userCourses, setUserCourses] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error] = useState(null);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    const mockCourses = [
-      {
-        id: 1,
-        userId: 1,
-        courseId: 1,
-        proficiency: 3,
-        course: { id: 1, name: "Introduction to Computer Science", description: "fundamentals of CS" }
-      },
-      {
-        id: 2,
-        userId: 1,
-        courseId: 2,
-        proficiency: 4,
-        course: { id: 2, name: "Data Structures", description: "Advanced data structures" }
-      },
-      {
-        id: 3,
-        userId: 1,
-        courseId: 3,
-        proficiency: 5,
-        course: { id: 3, name: "Algorithms", description: "Algorithm design and analysis" }
+    const fetchUserCourses = async () => {
+      try {
+        setLoading(true);
+        const coursesData = await apiService.getUserCourses(userId);
+        setUserCourses(coursesData);
+        setError(null);
+      } catch (err) {
+        setError('Failed to load your courses');
+        console.error('Error fetching user courses:', err);
+      } finally {
+        setLoading(false);
       }
-    ];
-    setUserCourses(mockCourses);
-    setLoading(false);
+    };
+
+    if (userId) {
+      fetchUserCourses();
+    }
   }, [userId]);
 
-  const handleRemoveCourse = (courseId) => {
-    setUserCourses(userCourses.filter(uc => uc.courseId !== courseId));
+  const handleRemoveCourse = async (courseId) => {
+    try {
+      await apiService.removeUserCourse(userId, courseId);
+      setUserCourses(userCourses.filter(uc => uc.courseId !== courseId));
+      setError(null);
+    } catch (err) {
+      setError('Failed to remove course');
+      console.error('Error removing course:', err);
+    }
   };
 
   if (loading) return <div>Loading courses...</div>;

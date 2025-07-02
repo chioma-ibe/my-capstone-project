@@ -11,6 +11,7 @@ export function useAuth() {
 
 export function FirebaseAuthProvider({ children }) {
   const [user, setUser] = useState(null);
+  const [dbUser, setDbUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [authError, setAuthError] = useState('');
 
@@ -48,18 +49,21 @@ export function FirebaseAuthProvider({ children }) {
     const unsubscribeAuth = onAuthStateChanged(auth, async (user) => {
       if (user) {
         try {
-          await apiService.authenticateUser(
+          const backendUser = await apiService.authenticateUser(
             user.uid,
             user.email,
             user.displayName
           );
           setUser(user);
+          setDbUser(backendUser.user);
         } catch (error) {
           console.error('Failed to authenticate user with backend:', error);
-          setUser(user); 
+          setUser(user);
+          setDbUser(null);
         }
       } else {
         setUser(null);
+        setDbUser(null);
       }
       setIsLoading(false);
     });
@@ -68,6 +72,7 @@ export function FirebaseAuthProvider({ children }) {
 
   const contextValue = {
     currentUser: user,
+    dbUser: dbUser,
     loading: isLoading,
     login: signInUser,
     signup: registerUser,
