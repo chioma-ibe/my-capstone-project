@@ -38,6 +38,10 @@ class ApiService {
     });
   }
 
+  async getPotentialMatches(userId) {
+    return this.request(`/users/potential-matches/${userId}`);
+  }
+
   async getCourses() {
     return this.request('/courses');
   }

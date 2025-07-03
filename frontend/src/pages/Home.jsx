@@ -1,35 +1,71 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useAuth } from '../contexts/AuthContext';
+import apiService from '../services/api';
 import '../styles/pages/Home.css';
 
 function Home() {
-  const [users] = useState([
-    {
-      id: 1,
-      name: 'Alex Johnson',
-      bio: 'Computer Science major interested in AI and machine learning.',
-      courses: ['Introduction to Computer Science', 'Machine Learning', 'Artificial Intelligence']
-    },
-    {
-      id: 2,
-      name: 'Jamie Smith',
-      bio: 'Math major looking for study partners for calculus and linear algebra.',
-      courses: ['Data Structures and Algorithms', 'Database Systems', 'Web Development']
-    },
-    {
-      id: 3,
-      name: 'Taylor Wilson',
-      bio: 'Engineering student passionate about robotics and programming.',
-      courses: ['Operating Systems', 'Computer Networks', 'Mobile App Development']
-    },
-    {
-      id: 4,
-      name: 'Morgan Lee',
-      bio: 'Physics major interested in theoretical physics and astronomy.',
-      courses: ['Software Engineering', 'Web Development', 'Database Systems']
-    }
-  ]);
-
+  const { dbUser } = useAuth();
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const [currentUserIndex, setCurrentUserIndex] = useState(0);
+
+  useEffect(() => {
+    const fetchPotentialMatches = async () => {
+      if (!dbUser?.id) return;
+
+      try {
+        setLoading(true);
+        setError('');
+        const matches = await apiService.getPotentialMatches(dbUser.id);
+        setUsers(matches);
+        setCurrentUserIndex(0);
+      } catch (err) {
+        console.error('Error fetching potential matches:', err);
+        setError('Failed to load potential matches');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPotentialMatches();
+  }, [dbUser]);
+
+  if (loading) {
+    return (
+      <div className="home-container">
+        <div>Loading potential matches...</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="home-container">
+        <div>Error: {error}</div>
+      </div>
+    );
+  }
+
+  if (!dbUser) {
+    return (
+      <div className="home-container">
+        <div>Please log in to find study buddies.</div>
+      </div>
+    );
+  }
+
+  if (users.length === 0) {
+    return (
+      <div className="home-container">
+        <h1>Find Study Buddies</h1>
+        <div className="no-matches">
+          <p>No potential matches found. Try adding more courses to your profile!</p>
+        </div>
+      </div>
+    );
+  }
+
   const currentUser = users[currentUserIndex];
 
   const handleMatch = () => {
@@ -63,10 +99,12 @@ function Home() {
             <h2>{currentUser.name}</h2>
             <p className="user-bio">{currentUser.bio}</p>
             <div className="user-courses">
-              <h3>Courses:</h3>
+              <h3>Shared Courses:</h3>
               <ul>
-                {currentUser.courses.map((course, index) => (
-                  <li key={index}>{course}</li>
+                {currentUser.sharedCourses.map((course) => (
+                  <li key={course.id}>
+                    {course.name} (Proficiency: {course.proficiency})
+                  </li>
                 ))}
               </ul>
             </div>
