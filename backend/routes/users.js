@@ -26,21 +26,24 @@ router.post('/firebase-auth', async (req, res) => {
     });
 
     if (!user) {
-     
-      user = await prisma.user.create({
-        data: {
-          firebaseId,
-          email,
-          name: name || email.split('@')[0],
-          password: '', 
-        },
-        include: {
-          userCourses: {
-            include: {
-              course: true
-            }
+      const userData = {
+        firebaseId,
+        email,
+        name: name || email.split('@')[0],
+        password: '',
+      };
+
+      const includeOptions = {
+        userCourses: {
+          include: {
+            course: true
           }
         }
+      };
+
+      user = await prisma.user.create({
+        data: userData,
+        include: includeOptions
       });
     }
 
