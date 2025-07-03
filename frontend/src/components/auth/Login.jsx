@@ -6,7 +6,7 @@ import '../../styles/components/auth/Auth.css';
 function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const { signInUser, authError, setAuthError } = useAuth();
+  const { login, authError, setAuthError } = useAuth();
   const navigate = useNavigate();
 
   async function handleSubmit(e) {
@@ -14,7 +14,7 @@ function Login() {
     setAuthError('');
 
     try {
-      await signInUser(email, password);
+      await login(email, password);
       navigate('/');
     } catch (error) {
       setAuthError(error.message);

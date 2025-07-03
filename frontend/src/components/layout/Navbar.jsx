@@ -1,37 +1,63 @@
 import { Link } from 'react-router-dom';
+import { useAuth } from '../../contexts/AuthContext';
 import '../../styles/components/layout/Navbar.css';
 
 function Navbar() {
+  const { currentUser, logout } = useAuth();
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+    } catch (error) {
+      console.error('Failed to log out:', error);
+    }
+  };
+
   return (
     <nav className="navbar">
       <div className="navbar-container">
         <Link to="/" className="navbar-logo">
           StudyBuddy
         </Link>
-        <ul className="nav-menu">
-          <li className="nav-item">
-            <Link to="/" className="nav-link">
-              Home
-            </Link>
-          </li>
-          <li className="nav-item">
-            <Link to="/profile" className="nav-link">
-              Profile
-            </Link>
-          </li>
-          <li className="nav-item">
-            <Link to="/matches" className="nav-link">
-              Matches
-            </Link>
-          </li>
-        </ul>
+
+        {currentUser && (
+          <ul className="nav-menu">
+            <li className="nav-item">
+              <Link to="/" className="nav-link">
+                Home
+              </Link>
+            </li>
+            <li className="nav-item">
+              <Link to="/profile" className="nav-link">
+                Profile
+              </Link>
+            </li>
+            <li className="nav-item">
+              <Link to="/matches" className="nav-link">
+                Matches
+              </Link>
+            </li>
+          </ul>
+        )}
+
         <div className="auth-links">
-          <Link to="/login" className="nav-link">
-            Login
-          </Link>
-          <Link to="/signup" className="nav-link">
-            Sign Up
-          </Link>
+          {currentUser ? (
+            <div className="user-info">
+              <span className="user-email">{currentUser.email}</span>
+              <button onClick={handleLogout} className="logout-btn">
+                Logout
+              </button>
+            </div>
+          ) : (
+            <>
+              <Link to="/login" className="nav-link">
+                Login
+              </Link>
+              <Link to="/signup" className="nav-link">
+                Sign Up
+              </Link>
+            </>
+          )}
         </div>
       </div>
     </nav>
