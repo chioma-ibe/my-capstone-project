@@ -53,6 +53,7 @@ function CourseSelector({ userId, onCourseAdded }) {
 
       setSelectedCourse('');
       setSelectedProficiency(1);
+      setError(null);
 
       if (onCourseAdded) {
         onCourseAdded(addedCourse);
@@ -67,20 +68,28 @@ function CourseSelector({ userId, onCourseAdded }) {
     }
   };
 
+  const handleCourseChange = (e) => {
+    setSelectedCourse(e.target.value);
+    if (error) {
+      setError(null);
+    }
+  };
+
+
   if (loading) return <div>Loading courses...</div>;
-  if (error) return <div>Error: {error}</div>;
   if (!courses.length) return <div>No courses available.</div>;
 
   return (
     <div className="course-selector">
       <h2>Add a Course</h2>
+      {error && <div className="error-message" style={{color: 'red', marginBottom: '10px'}}>{error}</div>}
       <form onSubmit={handleSubmit}>
         <div className="form-group">
           <label htmlFor="course">Course:</label>
           <select
             id="course"
             value={selectedCourse}
-            onChange={(e) => setSelectedCourse(e.target.value)}
+            onChange={handleCourseChange}
             required
           >
             <option value="">Select a course</option>
