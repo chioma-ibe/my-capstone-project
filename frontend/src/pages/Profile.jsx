@@ -1,29 +1,36 @@
 import { useState } from 'react';
+import { useAuth } from '../contexts/AuthContext';
 import UserCourses from '../components/UserCourses';
 import CourseSelector from '../components/CourseSelector';
 import '../styles/pages/Profile.css';
 
 function Profile() {
-  const [userId] = useState(1);
+  const { currentUser, dbUser, loading } = useAuth();
   const [refreshCourses, setRefreshCourses] = useState(false);
-  const [user] = useState({
-    id: 1,
-    name: 'Chioma',
-    email: 'chioma@ibe.com',
-    bio: 'Computer Engineerin student looking for study partners in programming courses.'
-  });
 
   const handleCourseAdded = () => {
     setRefreshCourses(prev => !prev);
   };
 
+  if (loading) {
+    return <div>Loading profile...</div>;
+  }
+
+  if (!currentUser) {
+    return <div>Please log in to view your profile.</div>;
+  }
+
+  if (!dbUser) {
+    return <div>Setting up your profile...</div>;
+  }
+
   return (
     <div className="profile-container">
       <div className="profile-header">
         <div className="profile-info">
-          <h1>{user.name}</h1>
-          <p className="profile-email">{user.email}</p>
-          <p className="profile-bio">{user.bio}</p>
+          <h1>{dbUser.name || currentUser.displayName || currentUser.email}</h1>
+          <p className="profile-email">{dbUser.email}</p>
+          <p className="profile-bio">{dbUser.bio || ''}</p>
           <button className="edit-profile-btn">Edit Profile</button>
         </div>
       </div>
@@ -32,14 +39,14 @@ function Profile() {
         <div className="courses-section">
           <div className="user-courses-container">
             <UserCourses
-              userId={userId}
+              userId={dbUser.id}
               key={refreshCourses ? 'refresh' : 'normal'}
             />
           </div>
 
           <div className="course-selector-container">
             <CourseSelector
-              userId={userId}
+              userId={dbUser.id}
               onCourseAdded={handleCourseAdded}
             />
           </div>

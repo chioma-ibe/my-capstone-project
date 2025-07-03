@@ -3,6 +3,8 @@ const cors = require('cors');
 const app = express();
 
 const userRoutes = require('./routes/users');
+const courseRoutes = require('./routes/courses');
+const userCourseRoutes = require('./routes/userCourses');
 
 const PORT = 3000;
 
@@ -16,6 +18,8 @@ app.use(express.json());
 app.get('/', (_, res) => { res.json({ message: 'study buddy' }); });
 
 app.use('/api/users', userRoutes);
+app.use('/api/courses', courseRoutes);
+app.use('/api/user-courses', userCourseRoutes);
 
 app.use((err, _req, res, _next) => {
   res.status(500).json({ message: 'Something went wrong!', error: err.message });

@@ -1,4 +1,4 @@
-const API_BASE_URL = 'http://localhost:3000/api';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 class ApiService {
   async request(endpoint, options = {}) {
@@ -30,11 +30,43 @@ class ApiService {
     }
   }
 
-  // User authentication with Firebase
+
   async authenticateUser(firebaseId, email, name) {
     return this.request('/users/firebase-auth', {
       method: 'POST',
       body: { firebaseId, email, name },
+    });
+  }
+
+  async getPotentialMatches(userId) {
+    return this.request(`/users/potential-matches/${userId}`);
+  }
+
+  async getCourses() {
+    return this.request('/courses');
+  }
+
+  async getUserCourses(userId) {
+    return this.request(`/user-courses/${userId}`);
+  }
+
+  async addUserCourse(userId, courseId, proficiency = 1) {
+    return this.request('/user-courses', {
+      method: 'POST',
+      body: { userId, courseId, proficiency },
+    });
+  }
+
+  async updateUserCourseProficiency(userId, courseId, proficiency) {
+    return this.request(`/user-courses/${userId}/${courseId}`, {
+      method: 'PUT',
+      body: { proficiency },
+    });
+  }
+
+  async removeUserCourse(userId, courseId) {
+    return this.request(`/user-courses/${userId}/${courseId}`, {
+      method: 'DELETE',
     });
   }
 }
