@@ -42,6 +42,10 @@ class ApiService {
     return this.request(`/users/potential-matches/${userId}`);
   }
 
+  async getConfirmedMatches(userId) {
+    return this.request(`/users/confirmed-matches/${userId}`);
+  }
+
   async getCourses() {
     return this.request('/courses');
   }
@@ -69,6 +73,14 @@ class ApiService {
       method: 'DELETE',
     });
   }
+
+  async createMatch(user1Id, user2Id) {
+    return this.request('/users/matches', {
+      method: 'POST',
+      body: { user1Id, user2Id },
+    });
+  }
+
 }
 
 export default new ApiService();

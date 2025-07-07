@@ -16,7 +16,7 @@ function Matches() {
       try {
         setLoading(true);
         setError(null);
-        const matchesData = await apiService.getPotentialMatches(dbUser.id);
+        const matchesData = await apiService.getConfirmedMatches(dbUser.id);
         setMatches(matchesData);
       } catch (err) {
         setError('Failed to load matches');
@@ -59,22 +59,6 @@ function Matches() {
               <div className="match-info">
                 <h2>{match.name}</h2>
                 <p className="match-email">{match.email}</p>
-                {match.bio && <p className="match-bio">{match.bio}</p>}
-                <p className="match-date">Matched on {match.matchedAt}</p>
-                <div className="match-courses">
-                  <h3>Shared Courses:</h3>
-                  <ul>
-                    {match.sharedCourses.map((course) => (
-                      <li key={course.id} className="shared-course">
-                        <span className="course-name">{course.name}</span>
-                        <div className="proficiency-levels">
-                          <span className="proficiency-label">Your level: {course.userProficiency}</span>
-                          <span className="proficiency-label">Their level: {course.matchProficiency}</span>
-                        </div>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
               </div>
               <div className="match-actions">
                 <button className="schedule-btn">Schedule Study Session</button>

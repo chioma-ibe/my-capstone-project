@@ -83,9 +83,24 @@ router.get('/potential-matches/:userId', async (req, res) => {
       return res.json([]);
     }
 
+    const existingMatches = await prisma.match.findMany({
+      where: {
+        OR: [
+          { user1Id: userId },
+          { user2Id: userId }
+        ]
+      }
+    });
+
+    const matchedUserIds = existingMatches.map(match =>
+      match.user1Id === userId ? match.user2Id : match.user1Id
+    );
+
+    const excludedUserIds = [...matchedUserIds, userId];
+
     const potentialMatches = await prisma.user.findMany({
       where: {
-        id: { not: userId },
+        id: { notIn: excludedUserIds },
         userCourses: {
           some: {
             courseId: { in: currentUserCourseIds }
@@ -104,17 +119,21 @@ router.get('/potential-matches/:userId', async (req, res) => {
       }
     });
 
-    const matchesWithSharedCourses = potentialMatches.map(user => ({
-      id: user.id,
-      name: user.name,
-      email: user.email,
-      bio: user.bio,
-      sharedCourses: user.userCourses.map(uc => ({
-        id: uc.course.id,
-        name: uc.course.name,
-        proficiency: uc.proficiency
-      }))
-    }));
+    const matchesWithSharedCourses = potentialMatches
+      .slice(0, 10)
+      .map(user => ({
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        bio: user.bio,
+        profilePhoto: user.profilePhoto,
+        matchedAt: new Date().toISOString().split('T')[0],
+        sharedCourses: user.userCourses.map(uc => ({
+          id: uc.course.id,
+          name: uc.course.name,
+          proficiency: uc.proficiency
+        }))
+      }));
 
     res.json(matchesWithSharedCourses);
   } catch (error) {
@@ -122,5 +141,131 @@ router.get('/potential-matches/:userId', async (req, res) => {
     res.status(500).json({ error: 'Failed to fetch potential matches' });
   }
 });
+
+router.post('/matches', async (req, res) => {
+  try {
+    const { user1Id, user2Id } = req.body;
+
+    if (!user1Id || !user2Id) {
+      return res.status(400).json({ error: 'Both user IDs are required' });
+    }
+
+    if (user1Id === user2Id) {
+      return res.status(400).json({ error: 'Cannot match with yourself' });
+    }
+
+    const existingMatch = await prisma.match.findFirst({
+      where: {
+        OR: [
+          { user1Id: parseInt(user1Id), user2Id: parseInt(user2Id) },
+          { user1Id: parseInt(user2Id), user2Id: parseInt(user1Id) }
+        ]
+      }
+    });
+
+    if (existingMatch) {
+      return res.status(409).json({ error: 'Match already exists' });
+    }
+
+    const match = await prisma.match.create({
+      data: {
+        user1Id: parseInt(user1Id),
+        user2Id: parseInt(user2Id)
+      },
+      include: {
+        user1: true,
+        user2: true
+      }
+    });
+
+    res.status(201).json(match);
+  } catch (error) {
+    console.error('Error creating match:', error);
+    res.status(500).json({ error: 'Failed to create match' });
+  }
+});
+
+router.get('/confirmed-matches/:userId', async (req, res) => {
+  try {
+    const userId = parseInt(req.params.userId);
+
+    if (isNaN(userId)) {
+      return res.status(400).json({ error: 'Invalid user ID' });
+    }
+
+    const currentUser = await prisma.user.findUnique({
+      where: { id: userId },
+      include: {
+        userCourses: {
+          include: {
+            course: true
+          }
+        }
+      }
+    });
+
+    if (!currentUser) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const matches = await prisma.match.findMany({
+      where: {
+        OR: [
+          { user1Id: userId },
+          { user2Id: userId }
+        ]
+      },
+      include: {
+        user1: {
+          include: {
+            userCourses: {
+              include: {
+                course: true
+              }
+            }
+          }
+        },
+        user2: {
+          include: {
+            userCourses: {
+              include: {
+                course: true
+              }
+            }
+          }
+        }
+      }
+    });
+
+    const confirmedMatches = matches.map(match => {
+      const matchedUser = match.user1Id === userId ? match.user2 : match.user1;
+      const currentUserCourseIds = currentUser.userCourses.map(uc => uc.courseId);
+
+      const sharedCourses = matchedUser.userCourses
+        .filter(uc => currentUserCourseIds.includes(uc.courseId))
+        .map(uc => ({
+          id: uc.course.id,
+          name: uc.course.name,
+          proficiency: uc.proficiency
+        }));
+
+      return {
+        id: matchedUser.id,
+        name: matchedUser.name,
+        email: matchedUser.email,
+        bio: matchedUser.bio,
+        profilePhoto: matchedUser.profilePhoto,
+        matchedAt: match.matchedAt.toISOString().split('T')[0],
+        sharedCourses: sharedCourses
+      };
+    });
+
+    res.json(confirmedMatches);
+  } catch (error) {
+    console.error('Error fetching confirmed matches:', error);
+    res.status(500).json({ error: 'Failed to fetch confirmed matches' });
+  }
+});
+
 
 module.exports = router;
