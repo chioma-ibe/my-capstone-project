@@ -81,6 +81,21 @@ class ApiService {
     });
   }
 
+  async createRating(userId, partnerId, score) {
+    return this.request('/users/ratings', {
+      method: 'POST',
+      body: { userId, partnerId, score },
+    });
+  }
+
+  async getUserRatings(userId) {
+    return this.request(`/users/ratings/${userId}`);
+  }
+
+  async getSpecificRating(userId, partnerId) {
+    return this.request(`/users/ratings/${userId}/${partnerId}`);
+  }
+
 }
 
 export default new ApiService();

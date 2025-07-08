@@ -1,16 +1,20 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import apiService from '../services/api';
+import RatingModal from '../components/RatingModal';
 import '../styles/pages/Matches.css';
 
 function Matches() {
   const { dbUser } = useAuth();
   const [matches, setMatches] = useState([]);
+  const [matchRatings, setMatchRatings] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [ratingModalOpen, setRatingModalOpen] = useState(false);
+  const [selectedPartner, setSelectedPartner] = useState(null);
 
   useEffect(() => {
-    const fetchMatches = async () => {
+    const fetchMatchesAndRatings = async () => {
       if (!dbUser?.id) return;
 
       try {
@@ -18,6 +22,18 @@ function Matches() {
         setError(null);
         const matchesData = await apiService.getConfirmedMatches(dbUser.id);
         setMatches(matchesData);
+
+        const ratingsData = {};
+        for (const match of matchesData) {
+          try {
+            const ratingInfo = await apiService.getUserRatings(match.id);
+            ratingsData[match.id] = ratingInfo;
+          } catch (err) {
+            console.error(`Error fetching ratings for user ${match.id}:`, err);
+            ratingsData[match.id] = { averageScore: 0, totalRatings: 0 };
+          }
+        }
+        setMatchRatings(ratingsData);
       } catch (err) {
         setError('Failed to load matches');
         console.error('Error fetching matches:', err);
@@ -26,8 +42,30 @@ function Matches() {
       }
     };
 
-    fetchMatches();
+    fetchMatchesAndRatings();
   }, [dbUser?.id]);
+
+  const handleRatePartner = (partner) => {
+    setSelectedPartner(partner);
+    setRatingModalOpen(true);
+  };
+
+  const handleCloseRatingModal = () => {
+    setRatingModalOpen(false);
+    setSelectedPartner(null);
+  };
+
+  const handleRatingSubmitted = async (partnerId) => {
+    try {
+      const ratingInfo = await apiService.getUserRatings(partnerId);
+      setMatchRatings(prev => ({
+        ...prev,
+        [partnerId]: ratingInfo
+      }));
+    } catch (err) {
+      console.error(`Error refreshing ratings for user ${partnerId}:`, err);
+    }
+  };
 
   if (!dbUser) {
     return <div>Please log in to view your matches.</div>;
@@ -59,15 +97,36 @@ function Matches() {
               <div className="match-info">
                 <h2>{match.name}</h2>
                 <p className="match-email">{match.email}</p>
+                {matchRatings[match.id] && (
+                  <div className="match-rating">
+                    {matchRatings[match.id].averageScore > 0 ? (
+                      <span className="rating-display">
+                        ⭐ {matchRatings[match.id].averageScore} ({matchRatings[match.id].totalRatings} reviews)
+                      </span>
+                    ) : (
+                      <span className="no-rating">No ratings yet</span>
+                    )}
+                  </div>
+                )}
               </div>
               <div className="match-actions">
                 <button className="schedule-btn">Schedule Study Session</button>
-                <button className="rate-btn">Rate Study Partner</button>
+                <button className="rate-btn" onClick={() => handleRatePartner(match)}>
+                  Rate Study Partner
+                </button>
               </div>
             </div>
           ))}
         </div>
       )}
+
+      <RatingModal
+        isOpen={ratingModalOpen}
+        onClose={handleCloseRatingModal}
+        partner={selectedPartner}
+        currentUserId={dbUser?.id}
+        onRatingSubmitted={handleRatingSubmitted}
+      />
     </div>
   );
 }

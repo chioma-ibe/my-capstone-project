@@ -43,6 +43,32 @@
   flex: 1;
 }
 
+.match-info h2 {
+  margin: 0 0 8px 0;
+  color: #333;
+}
+
+.match-email {
+  color: #666;
+  margin: 0 0 8px 0;
+}
+
+.match-rating {
+  margin: 8px 0 12px 0;
+}
+
+.rating-display {
+  color: #f39c12;
+  font-weight: 500;
+  font-size: 14px;
+}
+
+.no-rating {
+  color: #999;
+  font-style: italic;
+  font-size: 14px;
+}
+
 .match-date {
   color: #6c757d;
   margin-bottom: 1rem;

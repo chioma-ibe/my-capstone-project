@@ -267,5 +267,75 @@ router.get('/confirmed-matches/:userId', async (req, res) => {
   }
 });
 
+router.post('/ratings', async (req, res) => {
+  try {
+    const { userId, partnerId, score } = req.body;
+
+    const rating = await prisma.rating.upsert({
+      where: {
+        userId_partnerId: {
+          userId: parseInt(userId),
+          partnerId: parseInt(partnerId)
+        }
+      },
+      update: {
+        score: parseInt(score)
+      },
+      create: {
+        userId: parseInt(userId),
+        partnerId: parseInt(partnerId),
+        score: parseInt(score)
+      }
+    });
+
+    res.json(rating);
+  } catch (error) {
+    console.error('Error creating rating:', error);
+    res.status(500).json({ error: 'Failed to create rating' });
+  }
+});
+
+router.get('/ratings/:userId', async (req, res) => {
+  try {
+    const userId = parseInt(req.params.userId);
+
+    const ratings = await prisma.rating.findMany({
+      where: { partnerId: userId },
+      orderBy: { createdAt: 'desc' }
+    });
+
+    const averageScore = ratings.length > 0
+      ? ratings.reduce((sum, rating) => sum + rating.score, 0) / ratings.length
+      : 0;
+
+    res.json({
+      ratings,
+      averageScore: Math.round(averageScore * 10) / 10,
+      totalRatings: ratings.length
+    });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch ratings' });
+  }
+});
+
+router.get('/ratings/:userId/:partnerId', async (req, res) => {
+  try {
+    const userId = parseInt(req.params.userId);
+    const partnerId = parseInt(req.params.partnerId);
+
+    const rating = await prisma.rating.findUnique({
+      where: {
+        userId_partnerId: {
+          userId,
+          partnerId
+        }
+      }
+    });
+
+    res.json(rating);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch rating' });
+  }
+});
 
 module.exports = router;
