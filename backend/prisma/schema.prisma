@@ -53,6 +53,7 @@ model Match {
   matchedAt  DateTime @default(now())
 }
 
+
 model Calendar {
   id       Int      @id @default(autoincrement())
   user     User     @relation(fields: [userId], references: [id])
@@ -67,5 +68,7 @@ model Rating {
   partner    User     @relation("PartnerRatings", fields: [partnerId], references: [id])
   partnerId  Int
   score      Int
-  comment    String?
+  createdAt  DateTime @default(now())
+
+  @@unique([userId, partnerId])
 }

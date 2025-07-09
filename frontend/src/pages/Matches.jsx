@@ -1,27 +1,83 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useAuth } from '../contexts/AuthContext';
+import apiService from '../services/api';
+import RatingModal from '../components/RatingModal';
 import '../styles/pages/Matches.css';
 
 function Matches() {
-  const [matches] = useState([
-    {
-      id: 1,
-      name: 'Alex Johnson',
-      matchedAt: '2023-10-15',
-      courses: ['Introduction to Computer Science', 'Machine Learning']
-    },
-    {
-      id: 2,
-      name: 'Jamie Smith',
-      matchedAt: '2023-10-12',
-      courses: ['Data Structures and Algorithms', 'Web Development']
-    },
-    {
-      id: 3,
-      name: 'Morgan Lee',
-      matchedAt: '2023-10-10',
-      courses: ['Software Engineering', 'Database Systems']
+  const { dbUser } = useAuth();
+  const [matches, setMatches] = useState([]);
+  const [matchRatings, setMatchRatings] = useState({});
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [ratingModalOpen, setRatingModalOpen] = useState(false);
+  const [selectedPartner, setSelectedPartner] = useState(null);
+
+  useEffect(() => {
+    const fetchMatchesAndRatings = async () => {
+      if (!dbUser?.id) return;
+
+      try {
+        setLoading(true);
+        setError(null);
+        const matchesData = await apiService.getConfirmedMatches(dbUser.id);
+        setMatches(matchesData);
+
+        const ratingsData = {};
+        for (const match of matchesData) {
+          try {
+            const ratingInfo = await apiService.getUserRatings(match.id);
+            ratingsData[match.id] = ratingInfo;
+          } catch (err) {
+            console.error(`Error fetching ratings for user ${match.id}:`, err);
+            ratingsData[match.id] = { averageScore: 0, totalRatings: 0 };
+          }
+        }
+        setMatchRatings(ratingsData);
+      } catch (err) {
+        setError('Failed to load matches');
+        console.error('Error fetching matches:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchMatchesAndRatings();
+  }, [dbUser?.id]);
+
+  const handleRatePartner = (partner) => {
+    setSelectedPartner(partner);
+    setRatingModalOpen(true);
+  };
+
+  const handleCloseRatingModal = () => {
+    setRatingModalOpen(false);
+    setSelectedPartner(null);
+  };
+
+  const handleRatingSubmitted = async (partnerId) => {
+    try {
+      const ratingInfo = await apiService.getUserRatings(partnerId);
+      setMatchRatings(prev => ({
+        ...prev,
+        [partnerId]: ratingInfo
+      }));
+    } catch (err) {
+      console.error(`Error refreshing ratings for user ${partnerId}:`, err);
     }
-  ]);
+  };
+
+  if (!dbUser) {
+    return <div>Please log in to view your matches.</div>;
+  }
+
+  if (loading) {
+    return <div>Loading matches...</div>;
+  }
+
+  if (error) {
+    return <div className="error-message" style={{color: 'red'}}>{error}</div>;
+  }
 
   return (
     <div className="matches-container">
@@ -32,7 +88,7 @@ function Matches() {
 
       {matches.length === 0 ? (
         <div className="no-matches">
-          <p>You don't have any matches yet. Start matching with potential study buddies!</p>
+          <p>You don't have any matches yet. Add some courses to find study buddies!</p>
         </div>
       ) : (
         <div className="matches-list">
@@ -40,24 +96,37 @@ function Matches() {
             <div key={match.id} className="match-card">
               <div className="match-info">
                 <h2>{match.name}</h2>
-                <p className="match-date">Matched on {match.matchedAt}</p>
-                <div className="match-courses">
-                  <h3>Shared Courses:</h3>
-                  <ul>
-                    {match.courses.map((course, index) => (
-                      <li key={index}>{course}</li>
-                    ))}
-                  </ul>
-                </div>
+                <p className="match-email">{match.email}</p>
+                {matchRatings[match.id] && (
+                  <div className="match-rating">
+                    {matchRatings[match.id].averageScore > 0 ? (
+                      <span className="rating-display">
+                        ⭐ {matchRatings[match.id].averageScore} ({matchRatings[match.id].totalRatings} reviews)
+                      </span>
+                    ) : (
+                      <span className="no-rating">No ratings yet</span>
+                    )}
+                  </div>
+                )}
               </div>
               <div className="match-actions">
                 <button className="schedule-btn">Schedule Study Session</button>
-                <button className="rate-btn">Rate Study Partner</button>
+                <button className="rate-btn" onClick={() => handleRatePartner(match)}>
+                  Rate Study Partner
+                </button>
               </div>
             </div>
           ))}
         </div>
       )}
+
+      <RatingModal
+        isOpen={ratingModalOpen}
+        onClose={handleCloseRatingModal}
+        partner={selectedPartner}
+        currentUserId={dbUser?.id}
+        onRatingSubmitted={handleRatingSubmitted}
+      />
     </div>
   );
 }

@@ -42,6 +42,10 @@ class ApiService {
     return this.request(`/users/potential-matches/${userId}`);
   }
 
+  async getConfirmedMatches(userId) {
+    return this.request(`/users/confirmed-matches/${userId}`);
+  }
+
   async getCourses() {
     return this.request('/courses');
   }
@@ -69,6 +73,29 @@ class ApiService {
       method: 'DELETE',
     });
   }
+
+  async createMatch(user1Id, user2Id) {
+    return this.request('/users/matches', {
+      method: 'POST',
+      body: { user1Id, user2Id },
+    });
+  }
+
+  async createRating(userId, partnerId, score) {
+    return this.request('/users/ratings', {
+      method: 'POST',
+      body: { userId, partnerId, score },
+    });
+  }
+
+  async getUserRatings(userId) {
+    return this.request(`/users/ratings/${userId}`);
+  }
+
+  async getSpecificRating(userId, partnerId) {
+    return this.request(`/users/ratings/${userId}/${partnerId}`);
+  }
+
 }
 
 export default new ApiService();

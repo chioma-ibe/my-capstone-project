@@ -9,6 +9,7 @@ function Home() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [currentUserIndex, setCurrentUserIndex] = useState(0);
+  const [actionLoading, setActionLoading] = useState(false);
 
   useEffect(() => {
     const fetchPotentialMatches = async () => {
@@ -68,21 +69,45 @@ function Home() {
 
   const currentUser = users[currentUserIndex];
 
-  const handleMatch = () => {
-    goToNextUser();
+  const handleMatch = async () => {
+    if (!currentUser || actionLoading) return;
+
+    try {
+      setActionLoading(true);
+      await apiService.createMatch(dbUser.id, currentUser.id);
+
+      setUsers(prevUsers => {
+        const newUsers = prevUsers.filter(user => user.id !== currentUser.id);
+        return newUsers;
+      });
+
+      setCurrentUserIndex(prevIndex => {
+        if (prevIndex >= users.length - 1) {
+          return 0;
+        }
+        return prevIndex;
+      });
+    } catch (err) {
+      console.error('Error creating match:', err);
+      setError('Failed to create match');
+    } finally {
+      setActionLoading(false);
+    }
   };
 
   const handleSkip = () => {
-    goToNextUser();
-  };
+    if (!currentUser) return;
 
-  const goToNextUser = () => {
-    setCurrentUserIndex((prevIndex) => {
+    setUsers(prevUsers => {
+      const newUsers = prevUsers.filter(user => user.id !== currentUser.id);
+      return newUsers;
+    });
+
+    setCurrentUserIndex(prevIndex => {
       if (prevIndex >= users.length - 1) {
         return 0;
-      } else {
-        return prevIndex + 1;
       }
+      return prevIndex;
     });
   };
 
@@ -98,6 +123,14 @@ function Home() {
           <div className="user-info">
             <h2>{currentUser.name}</h2>
             <p className="user-bio">{currentUser.bio}</p>
+
+            <p className="user-rating">
+              Rating: {currentUser.averageRating > 0
+                ? `${currentUser.averageRating}/5.0 (${currentUser.totalRatings} reviews)`
+                : 'No ratings yet'
+              }
+            </p>
+
             <div className="user-courses">
               <h3>Shared Courses:</h3>
               <ul>
@@ -113,14 +146,16 @@ function Home() {
             <button
               className="skip-button"
               onClick={handleSkip}
+              disabled={actionLoading}
             >
-              Skip
+              {actionLoading ? 'Skipping...' : 'Skip'}
             </button>
             <button
               className="match-button"
               onClick={handleMatch}
+              disabled={actionLoading}
             >
-              Match
+              {actionLoading ? 'Matching...' : 'Match'}
             </button>
           </div>
         </div>
