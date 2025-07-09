@@ -82,7 +82,7 @@ function CourseSelector({ userId, onCourseAdded }) {
   return (
     <div className="course-selector">
       <h2>Add a Course</h2>
-      {error && <div className="error-message" style={{color: 'red', marginBottom: '10px'}}>{error}</div>}
+      {error && <div className="error-message">{error}</div>}
       <form onSubmit={handleSubmit}>
         <div className="form-group">
           <label htmlFor="course">Course:</label>

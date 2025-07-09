@@ -49,3 +49,8 @@
 .add-course-btn:hover {
   background-color: #27ae60;
 }
+
+.error-message {
+  color: red;
+  margin-bottom: 10px;
+}
