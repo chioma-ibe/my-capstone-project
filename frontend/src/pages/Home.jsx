@@ -5,7 +5,7 @@ import '../styles/pages/Home.css';
 
 function Home() {
   const { dbUser } = useAuth();
-  const [users, setUsers] = useState([]);
+  const [potentialMatches, setPotentialMatches] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [currentUserIndex, setCurrentUserIndex] = useState(0);
@@ -19,7 +19,7 @@ function Home() {
         setLoading(true);
         setError('');
         const matches = await apiService.getPotentialMatches(dbUser.id);
-        setUsers(matches);
+        setPotentialMatches(matches);
         setCurrentUserIndex(0);
       } catch (err) {
         console.error('Error fetching potential matches:', err);
@@ -56,7 +56,7 @@ function Home() {
     );
   }
 
-  if (users.length === 0) {
+  if (potentialMatches.length === 0) {
     return (
       <div className="home-container">
         <h1>Find Study Buddies</h1>
@@ -67,22 +67,22 @@ function Home() {
     );
   }
 
-  const currentUser = users[currentUserIndex];
+  const currentPotentialMatch = potentialMatches[currentUserIndex];
 
   const handleMatch = async () => {
-    if (!currentUser || actionLoading) return;
+    if (!currentPotentialMatch || actionLoading) return;
 
     try {
       setActionLoading(true);
-      await apiService.createMatch(dbUser.id, currentUser.id);
+      await apiService.createMatch(dbUser.id, currentPotentialMatch.id);
 
-      setUsers(prevUsers => {
-        const newUsers = prevUsers.filter(user => user.id !== currentUser.id);
-        return newUsers;
+      setPotentialMatches(prevMatches => {
+        const newMatches = prevMatches.filter(user => user.id !== currentPotentialMatch.id);
+        return newMatches;
       });
 
       setCurrentUserIndex(prevIndex => {
-        if (prevIndex >= users.length - 1) {
+        if (prevIndex >= potentialMatches.length - 1) {
           return 0;
         }
         return prevIndex;
@@ -96,15 +96,15 @@ function Home() {
   };
 
   const handleSkip = () => {
-    if (!currentUser) return;
+    if (!currentPotentialMatch) return;
 
-    setUsers(prevUsers => {
-      const newUsers = prevUsers.filter(user => user.id !== currentUser.id);
-      return newUsers;
+    setPotentialMatches(prevMatches => {
+      const newMatches = prevMatches.filter(user => user.id !== currentPotentialMatch.id);
+      return newMatches;
     });
 
     setCurrentUserIndex(prevIndex => {
-      if (prevIndex >= users.length - 1) {
+      if (prevIndex >= potentialMatches.length - 1) {
         return 0;
       }
       return prevIndex;
@@ -121,12 +121,12 @@ function Home() {
       <div className="single-user-container">
         <div className="user-card">
           <div className="user-info">
-            <h2>{currentUser.name}</h2>
-            <p className="user-bio">{currentUser.bio}</p>
+            <h2>{currentPotentialMatch.name}</h2>
+            <p className="user-bio">{currentPotentialMatch.bio}</p>
 
             <p className="user-rating">
-              Rating: {currentUser.averageRating > 0
-                ? `${currentUser.averageRating}/5.0 (${currentUser.totalRatings} reviews)`
+              Rating: {currentPotentialMatch.averageRating > 0
+                ? `${currentPotentialMatch.averageRating}/5.0 (${currentPotentialMatch.totalRatings} reviews)`
                 : 'No ratings yet'
               }
             </p>
@@ -134,7 +134,7 @@ function Home() {
             <div className="user-courses">
               <h3>Shared Courses:</h3>
               <ul>
-                {currentUser.sharedCourses.map((course) => (
+                {currentPotentialMatch.sharedCourses.map((course) => (
                   <li key={course.id}>
                     {course.name} (Proficiency: {course.proficiency})
                   </li>
