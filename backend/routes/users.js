@@ -115,12 +115,66 @@ router.get('/potential-matches/:userId', async (req, res) => {
           where: {
             courseId: { in: currentUserCourseIds }
           }
-        }
+        },
+        ratings: true
       }
     });
 
+    const calculateMatchingScore = (currentUser, potentialMatch) => {
+      const weights = {
+        courseOverlap: 0.4,
+        proficiencyBalance: 0.3,
+        averageRating: 0.3
+      };
+
+      let courseOverlapScore = 0;
+      let proficiencyBalanceScore = 0;
+      let averageRatingScore = 0;
+
+      const currentUserCourseIds = new Set(currentUser.userCourses.map(uc => uc.courseId));
+      const potentialMatchCourseIds = new Set(potentialMatch.userCourses.map(uc => uc.courseId));
+
+      const sharedCourses = [...currentUserCourseIds].filter(id => potentialMatchCourseIds.has(id));
+      const totalUniqueCourses = new Set([...currentUserCourseIds, ...potentialMatchCourseIds]).size;
+
+      if (totalUniqueCourses > 0) {
+        courseOverlapScore = sharedCourses.length / totalUniqueCourses;
+      }
+
+      let proficiencyDifferenceSum = 0;
+      let sharedCoursesCount = 0;
+
+      sharedCourses.forEach(courseId => {
+        const currentUserProficiency = currentUser.userCourses.find(uc => uc.courseId === courseId)?.proficiency || 1;
+        const potentialMatchProficiency = potentialMatch.userCourses.find(uc => uc.courseId === courseId)?.proficiency || 1;
+
+        proficiencyDifferenceSum += Math.abs(currentUserProficiency - potentialMatchProficiency);
+        sharedCoursesCount++;
+      });
+
+      if (sharedCoursesCount > 0) {
+        const averageProficiencyDifference = proficiencyDifferenceSum / sharedCoursesCount;
+        const maxProficiencyDifference = 4;
+        proficiencyBalanceScore = 1 - (averageProficiencyDifference / maxProficiencyDifference);
+      }
+      // Calculate actual rating score - we need to fetch ratings for this user
+      // For now using default, but this should be replaced with actual rating calculation
+      if (potentialMatch.ratings && potentialMatch.ratings.length > 0) {
+        const avgRating = potentialMatch.ratings.reduce((sum, rating) => sum + rating.score, 0) / potentialMatch.ratings.length;
+        averageRatingScore = avgRating / 5; // Normalize to 0-1 scale (assuming 1-5 rating scale)
+      } else {
+        averageRatingScore = 0.4; // Default for users with no ratings
+      }
+
+      const totalScore =
+        (courseOverlapScore * weights.courseOverlap) +
+        (proficiencyBalanceScore * weights.proficiencyBalance) +
+        (averageRatingScore * weights.averageRating);
+
+      return Math.round(totalScore * 100) / 100;
+    };
+
     const matchesWithSharedCourses = potentialMatches
-      .slice(0, 10)
       .map(user => ({
         id: user.id,
         name: user.name,
@@ -128,12 +182,15 @@ router.get('/potential-matches/:userId', async (req, res) => {
         bio: user.bio,
         profilePhoto: user.profilePhoto,
         matchedAt: new Date().toISOString().split('T')[0],
+        matchingScore: calculateMatchingScore(currentUser, user),
         sharedCourses: user.userCourses.map(uc => ({
           id: uc.course.id,
           name: uc.course.name,
           proficiency: uc.proficiency
         }))
-      }));
+      }))
+      .sort((a, b) => b.matchingScore - a.matchingScore)
+      .slice(0, 10);
 
     res.json(matchesWithSharedCourses);
   } catch (error) {
