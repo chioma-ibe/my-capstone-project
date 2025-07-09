@@ -157,13 +157,12 @@ router.get('/potential-matches/:userId', async (req, res) => {
         const maxProficiencyDifference = 4;
         proficiencyBalanceScore = 1 - (averageProficiencyDifference / maxProficiencyDifference);
       }
-      // Calculate actual rating score - we need to fetch ratings for this user
-      // For now using default, but this should be replaced with actual rating calculation
+
       if (potentialMatch.ratings && potentialMatch.ratings.length > 0) {
         const avgRating = potentialMatch.ratings.reduce((sum, rating) => sum + rating.score, 0) / potentialMatch.ratings.length;
-        averageRatingScore = avgRating / 5; // Normalize to 0-1 scale (assuming 1-5 rating scale)
+        averageRatingScore = avgRating / 5;
       } else {
-        averageRatingScore = 0.4; // Default for users with no ratings
+        averageRatingScore = 0.4;
       }
 
       const totalScore =
@@ -175,20 +174,28 @@ router.get('/potential-matches/:userId', async (req, res) => {
     };
 
     const matchesWithSharedCourses = potentialMatches
-      .map(user => ({
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        bio: user.bio,
-        profilePhoto: user.profilePhoto,
-        matchedAt: new Date().toISOString().split('T')[0],
-        matchingScore: calculateMatchingScore(currentUser, user),
-        sharedCourses: user.userCourses.map(uc => ({
-          id: uc.course.id,
-          name: uc.course.name,
-          proficiency: uc.proficiency
-        }))
-      }))
+      .map(user => {
+        const averageRating = user.ratings.length > 0
+          ? user.ratings.reduce((sum, rating) => sum + rating.score, 0) / user.ratings.length
+          : 0;
+
+        return {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          bio: user.bio,
+          profilePhoto: user.profilePhoto,
+          matchedAt: new Date().toISOString().split('T')[0],
+          matchingScore: calculateMatchingScore(currentUser, user),
+          averageRating: Math.round(averageRating * 10) / 10,
+          totalRatings: user.ratings.length,
+          sharedCourses: user.userCourses.map(uc => ({
+            id: uc.course.id,
+            name: uc.course.name,
+            proficiency: uc.proficiency
+          }))
+        };
+      })
       .sort((a, b) => b.matchingScore - a.matchingScore)
       .slice(0, 10);
 

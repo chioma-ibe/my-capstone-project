@@ -123,6 +123,14 @@ function Home() {
           <div className="user-info">
             <h2>{currentUser.name}</h2>
             <p className="user-bio">{currentUser.bio}</p>
+
+            <p className="user-rating">
+              Rating: {currentUser.averageRating > 0
+                ? `${currentUser.averageRating}/5.0 (${currentUser.totalRatings} reviews)`
+                : 'No ratings yet'
+              }
+            </p>
+
             <div className="user-courses">
               <h3>Shared Courses:</h3>
               <ul>
