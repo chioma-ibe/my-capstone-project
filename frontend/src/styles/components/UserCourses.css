@@ -37,14 +37,35 @@
   color: #2c3e50;
 }
 
-.proficiency-badge {
-  display: inline-block;
-  background-color: #3498db;
+
+.edit-proficiency-btn {
+  background-color: rgba(52, 152, 219, 0.8);
   color: white;
-  padding: 0.2rem 0.5rem;
+  border: none;
+  padding: 4px 8px;
   border-radius: 4px;
   font-size: 0.8rem;
-  margin-bottom: 0.5rem;
+  margin-bottom: 5px;
+  cursor: pointer;
+}
+
+.edit-proficiency-btn:hover {
+  background-color: rgba(52, 152, 219, 1);
+}
+
+
+
+.proficiency-editor {
+  margin-top: 5px;
+  margin-bottom: 10px;
+}
+
+.proficiency-editor select {
+  margin-right: 5px;
+}
+
+.proficiency-editor button {
+  margin-right: 5px;
 }
 
 .course-description {

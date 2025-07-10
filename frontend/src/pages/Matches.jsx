@@ -130,6 +130,24 @@ function Matches() {
                     )}
                   </div>
                 )}
+
+                <div className="match-details">
+                  <p className="match-date">Matched on: {match.matchedAt}</p>
+                  <div className="match-courses">
+                    <h3>Shared Courses:</h3>
+                    {match.sharedCourses && match.sharedCourses.length > 0 ? (
+                      <ul>
+                        {match.sharedCourses.map(course => (
+                          <li key={course.id}>
+                            {course.name} (Proficiency: {course.proficiency})
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p>No shared courses found</p>
+                    )}
+                  </div>
+                </div>
               </div>
               <div className="match-actions">
                 <button className="schedule-btn">Schedule Study Session</button>

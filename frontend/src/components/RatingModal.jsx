@@ -87,7 +87,7 @@ function RatingModal({ isOpen, onClose, partner, currentUserId, onRatingSubmitte
           <form onSubmit={handleSubmit} className="rating-form">
             {isEditing && existingRating && (
               <div className="existing-rating-notice">
-                <p>You previously rated this person {existingRating.score}/5 stars</p>
+                <p>You have rated this person {existingRating.score}/5 stars</p>
                 <p>You can update your rating below:</p>
               </div>
             )}
