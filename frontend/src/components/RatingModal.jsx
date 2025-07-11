@@ -2,42 +2,23 @@ import { useState, useEffect } from 'react';
 import apiService from '../services/api';
 import '../styles/components/RatingModal.css';
 
-function RatingModal({ isOpen, onClose, partner, currentUserId, onRatingSubmitted }) {
+function RatingModal({ isOpen, onClose, partner, currentUserId, onRatingSubmitted, existingRating }) {
   const [rating, setRating] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [isEditing, setIsEditing] = useState(false);
-  const [existingRating, setExistingRating] = useState(null);
-  const [checkingExisting, setCheckingExisting] = useState(false);
 
   useEffect(() => {
-    if (isOpen && partner && currentUserId) {
-      checkExistingRating();
-    }
-  }, [isOpen, partner, currentUserId]);
-
-  const checkExistingRating = async () => {
-    try {
-      setCheckingExisting(true);
-      const existingRatingData = await apiService.getSpecificRating(currentUserId, partner.id);
-
-      if (existingRatingData && existingRatingData.score) {
-        setExistingRating(existingRatingData);
-        setRating(existingRatingData.score.toString());
+    if (isOpen && partner) {
+      if (existingRating && existingRating.score) {
+        setRating(existingRating.score.toString());
         setIsEditing(true);
       } else {
-        setExistingRating(null);
         setRating('');
         setIsEditing(false);
       }
-    } catch (err) {
-      setExistingRating(null);
-      setRating('');
-      setIsEditing(false);
-    } finally {
-      setCheckingExisting(false);
     }
-  };
+  }, [isOpen, partner, existingRating]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -52,12 +33,11 @@ function RatingModal({ isOpen, onClose, partner, currentUserId, onRatingSubmitte
       setError('');
       await apiService.createRating(currentUserId, partner.id, parseInt(rating));
       if (onRatingSubmitted) {
-        onRatingSubmitted(partner.id);
+        onRatingSubmitted(partner.id, parseInt(rating));
       }
       onClose();
       setRating('');
       setIsEditing(false);
-      setExistingRating(null);
     } catch (err) {
       setError(isEditing ? 'Failed to update rating' : 'Failed to submit rating');
     } finally {
@@ -81,16 +61,13 @@ function RatingModal({ isOpen, onClose, partner, currentUserId, onRatingSubmitte
           <button className="close-button" onClick={onClose}>×</button>
         </div>
 
-        {checkingExisting ? (
-          <div className="loading-message">Checking existing rating...</div>
-        ) : (
-          <form onSubmit={handleSubmit} className="rating-form">
-            {isEditing && existingRating && (
-              <div className="existing-rating-notice">
-                <p>You have rated this person {existingRating.score}/5 stars</p>
-                <p>You can update your rating below:</p>
-              </div>
-            )}
+        <form onSubmit={handleSubmit} className="rating-form">
+          {isEditing && existingRating && (
+            <div className="existing-rating-notice">
+              <p>You have rated this person {existingRating.score}/5 stars</p>
+              <p>You can update your rating below:</p>
+            </div>
+          )}
 
             <div className="rating-field">
               <label htmlFor="rating">Rating:</label>
@@ -123,7 +100,6 @@ function RatingModal({ isOpen, onClose, partner, currentUserId, onRatingSubmitte
               </button>
             </div>
           </form>
-        )}
       </div>
     </div>
   );
