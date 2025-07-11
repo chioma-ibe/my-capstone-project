@@ -8,6 +8,7 @@ function Matches() {
   const { dbUser } = useAuth();
   const [matches, setMatches] = useState([]);
   const [matchRatings, setMatchRatings] = useState({});
+  const [userRatings, setUserRatings] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [ratingModalOpen, setRatingModalOpen] = useState(false);
@@ -24,19 +25,28 @@ function Matches() {
         setMatches(matchesData);
 
         const ratingsData = {};
+        const userRatingsData = {};
+
         for (const match of matchesData) {
           try {
             const ratingInfo = await apiService.getUserRatings(match.id);
             ratingsData[match.id] = ratingInfo;
+
+            try {
+              const existingRating = await apiService.getSpecificRating(dbUser.id, match.id);
+              userRatingsData[match.id] = existingRating;
+            } catch (err) {
+              userRatingsData[match.id] = null;
+            }
           } catch (err) {
-            console.error(`Error fetching ratings for user ${match.id}:`, err);
             ratingsData[match.id] = { averageScore: 0, totalRatings: 0 };
+            userRatingsData[match.id] = null;
           }
         }
         setMatchRatings(ratingsData);
+        setUserRatings(userRatingsData);
       } catch (err) {
         setError('Failed to load matches');
-        console.error('Error fetching matches:', err);
       } finally {
         setLoading(false);
       }
@@ -62,8 +72,20 @@ function Matches() {
         ...prev,
         [partnerId]: ratingInfo
       }));
+
+      try {
+        const existingRating = await apiService.getSpecificRating(dbUser.id, partnerId);
+        setUserRatings(prev => ({
+          ...prev,
+          [partnerId]: existingRating
+        }));
+      } catch (err) {
+        setUserRatings(prev => ({
+          ...prev,
+          [partnerId]: null
+        }));
+      }
     } catch (err) {
-      console.error(`Error refreshing ratings for user ${partnerId}:`, err);
     }
   };
 
@@ -108,11 +130,29 @@ function Matches() {
                     )}
                   </div>
                 )}
+
+                <div className="match-details">
+                  <p className="match-date">Matched on: {match.matchedAt}</p>
+                  <div className="match-courses">
+                    <h3>Shared Courses:</h3>
+                    {match.sharedCourses && match.sharedCourses.length > 0 ? (
+                      <ul>
+                        {match.sharedCourses.map(course => (
+                          <li key={course.id}>
+                            {course.name} (Proficiency: {course.proficiency})
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p>No shared courses found</p>
+                    )}
+                  </div>
+                </div>
               </div>
               <div className="match-actions">
                 <button className="schedule-btn">Schedule Study Session</button>
                 <button className="rate-btn" onClick={() => handleRatePartner(match)}>
-                  Rate Study Partner
+                  {userRatings[match.id] ? 'Update Rating' : 'Rate Study Partner'}
                 </button>
               </div>
             </div>

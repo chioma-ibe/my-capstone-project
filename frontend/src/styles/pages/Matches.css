@@ -41,6 +41,32 @@
 
 .match-info {
   flex: 1;
+  position: relative;
+}
+
+.match-details {
+  display: none;
+  background-color: #f8f9fa;
+  border-radius: 6px;
+  padding: 1rem;
+  margin-top: 1rem;
+  border-left: 3px solid #3498db;
+}
+
+.match-card:hover {
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+  transform: translateY(-3px);
+  transition: all 0.3s ease;
+}
+
+.match-card:hover .match-details {
+  display: block;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .match-info h2 {

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import apiService from '../services/api';
 import '../styles/components/RatingModal.css';
 
@@ -6,6 +6,38 @@ function RatingModal({ isOpen, onClose, partner, currentUserId, onRatingSubmitte
   const [rating, setRating] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [isEditing, setIsEditing] = useState(false);
+  const [existingRating, setExistingRating] = useState(null);
+  const [checkingExisting, setCheckingExisting] = useState(false);
+
+  useEffect(() => {
+    if (isOpen && partner && currentUserId) {
+      checkExistingRating();
+    }
+  }, [isOpen, partner, currentUserId]);
+
+  const checkExistingRating = async () => {
+    try {
+      setCheckingExisting(true);
+      const existingRatingData = await apiService.getSpecificRating(currentUserId, partner.id);
+
+      if (existingRatingData && existingRatingData.score) {
+        setExistingRating(existingRatingData);
+        setRating(existingRatingData.score.toString());
+        setIsEditing(true);
+      } else {
+        setExistingRating(null);
+        setRating('');
+        setIsEditing(false);
+      }
+    } catch (err) {
+      setExistingRating(null);
+      setRating('');
+      setIsEditing(false);
+    } finally {
+      setCheckingExisting(false);
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -24,9 +56,10 @@ function RatingModal({ isOpen, onClose, partner, currentUserId, onRatingSubmitte
       }
       onClose();
       setRating('');
+      setIsEditing(false);
+      setExistingRating(null);
     } catch (err) {
-      setError('Failed to submit rating');
-      console.error('Error submitting rating:', err);
+      setError(isEditing ? 'Failed to update rating' : 'Failed to submit rating');
     } finally {
       setLoading(false);
     }
@@ -44,39 +77,53 @@ function RatingModal({ isOpen, onClose, partner, currentUserId, onRatingSubmitte
     <div className="rating-modal-overlay" onClick={handleOverlayClick}>
       <div className="rating-modal">
         <div className="rating-modal-header">
-          <h3>Rate {partner.name}</h3>
+          <h3>{isEditing ? 'Update Rating for' : 'Rate'} {partner.name}</h3>
           <button className="close-button" onClick={onClose}>×</button>
         </div>
 
-        <form onSubmit={handleSubmit} className="rating-form">
-          <div className="rating-field">
-            <label htmlFor="rating">Rating:</label>
-            <select
-              id="rating"
-              value={rating}
-              onChange={(e) => setRating(e.target.value)}
-              required
-            >
-              <option value="">Select Rating</option>
-              <option value="1">⭐ (1 star)</option>
-              <option value="2">⭐⭐ (2 stars)</option>
-              <option value="3">⭐⭐⭐ (3 stars)</option>
-              <option value="4">⭐⭐⭐⭐ (4 stars)</option>
-              <option value="5">⭐⭐⭐⭐⭐ (5 stars)</option>
-            </select>
-          </div>
+        {checkingExisting ? (
+          <div className="loading-message">Checking existing rating...</div>
+        ) : (
+          <form onSubmit={handleSubmit} className="rating-form">
+            {isEditing && existingRating && (
+              <div className="existing-rating-notice">
+                <p>You have rated this person {existingRating.score}/5 stars</p>
+                <p>You can update your rating below:</p>
+              </div>
+            )}
 
-          {error && <div className="error-message">{error}</div>}
+            <div className="rating-field">
+              <label htmlFor="rating">Rating:</label>
+              <select
+                id="rating"
+                value={rating}
+                onChange={(e) => setRating(e.target.value)}
+                required
+              >
+                <option value="">Select Rating</option>
+                <option value="1">⭐ (1 star)</option>
+                <option value="2">⭐⭐ (2 stars)</option>
+                <option value="3">⭐⭐⭐ (3 stars)</option>
+                <option value="4">⭐⭐⭐⭐ (4 stars)</option>
+                <option value="5">⭐⭐⭐⭐⭐ (5 stars)</option>
+              </select>
+            </div>
 
-          <div className="rating-modal-actions">
-            <button type="button" onClick={onClose} disabled={loading}>
-              Cancel
-            </button>
-            <button type="submit" disabled={loading || !rating}>
-              {loading ? 'Submitting...' : 'Submit Rating'}
-            </button>
-          </div>
-        </form>
+            {error && <div className="error-message">{error}</div>}
+
+            <div className="rating-modal-actions">
+              <button type="button" onClick={onClose} disabled={loading}>
+                Cancel
+              </button>
+              <button type="submit" disabled={loading || !rating}>
+                {loading
+                  ? (isEditing ? 'Updating...' : 'Submitting...')
+                  : (isEditing ? 'Update Rating' : 'Submit Rating')
+                }
+              </button>
+            </div>
+          </form>
+        )}
       </div>
     </div>
   );

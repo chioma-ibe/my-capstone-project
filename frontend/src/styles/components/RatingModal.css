@@ -41,10 +41,26 @@
   gap: 15px;
 }
 
-.rating-field select {
+.rating-field select,
+.rating-modal-actions button {
   padding: 8px;
   border: 1px solid #ddd;
   border-radius: 4px;
+}
+
+.rating-modal-actions button {
+  padding: 8px 16px;
+  cursor: pointer;
+}
+
+.rating-modal-actions button[type="submit"] {
+  background: #007bff;
+  color: white;
+}
+
+.rating-modal-actions button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .error-message {
@@ -58,19 +74,33 @@
   justify-content: flex-end;
 }
 
-.rating-modal-actions button {
-  padding: 8px 16px;
-  border: 1px solid #ddd;
+.loading-message {
+  text-align: center;
+  padding: 20px;
+  color: #666;
+  font-style: italic;
+}
+
+.existing-rating-notice {
+  background: #f8f9fa;
+  border: 1px solid #e9ecef;
   border-radius: 4px;
-  cursor: pointer;
+  padding: 12px;
+  margin-bottom: 15px;
 }
 
-.rating-modal-actions button[type="submit"] {
-  background: #007bff;
-  color: white;
+.existing-rating-notice p {
+  margin: 0;
+  font-size: 14px;
+  color: #495057;
 }
 
-.rating-modal-actions button:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
+.existing-rating-notice p:first-child {
+  font-weight: 600;
+  color: #007bff;
+}
+
+.existing-rating-notice p:last-child {
+  margin-top: 5px;
+  font-style: italic;
 }
