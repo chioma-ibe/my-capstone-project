@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import apiService from '../services/api';
 import '../styles/pages/Home.css';
+import { motion, useAnimation } from 'framer-motion';
 
 function Home() {
   const { dbUser } = useAuth();
@@ -10,6 +11,7 @@ function Home() {
   const [error, setError] = useState('');
   const [currentUserIndex, setCurrentUserIndex] = useState(0);
   const [actionLoading, setActionLoading] = useState(false);
+  const controls = useAnimation();
 
   useEffect(() => {
     const fetchPotentialMatches = async () => {
@@ -74,6 +76,14 @@ function Home() {
 
     try {
       setActionLoading(true);
+
+      await controls.start({
+        x: 300,
+        rotate: 30,
+        opacity: 0,
+        transition: { duration: 0.3 }
+      });
+
       await apiService.createMatch(dbUser.id, currentPotentialMatch.id);
 
       setPotentialMatches(prevMatches => {
@@ -87,28 +97,47 @@ function Home() {
         }
         return prevIndex;
       });
+
+      controls.set({ x: 0, rotate: 0, opacity: 1 });
     } catch (err) {
       console.error('Error creating match:', err);
       setError('Failed to create match');
+      controls.set({ x: 0, rotate: 0, opacity: 1 });
     } finally {
       setActionLoading(false);
     }
   };
 
-  const handleSkip = () => {
-    if (!currentPotentialMatch) return;
+  const handleSkip = async () => {
+    if (!currentPotentialMatch || actionLoading) return;
 
-    setPotentialMatches(prevMatches => {
-      const newMatches = prevMatches.filter(user => user.id !== currentPotentialMatch.id);
-      return newMatches;
-    });
+    try {
+      setActionLoading(true);
 
-    setCurrentUserIndex(prevIndex => {
-      if (prevIndex >= potentialMatches.length - 1) {
-        return 0;
-      }
-      return prevIndex;
-    });
+      await controls.start({
+        x: -300,
+        rotate: -30,
+        opacity: 0,
+        transition: { duration: 0.3 }
+      });
+
+      setPotentialMatches(prevMatches => {
+        const newMatches = prevMatches.filter(user => user.id !== currentPotentialMatch.id);
+        return newMatches;
+      });
+
+      setCurrentUserIndex(prevIndex => {
+        if (prevIndex >= potentialMatches.length - 1) {
+          return 0;
+        }
+        return prevIndex;
+      });
+
+      // Reset card position for next card
+      controls.set({ x: 0, rotate: 0, opacity: 1 });
+    } finally {
+      setActionLoading(false);
+    }
   };
 
   return (
@@ -119,7 +148,35 @@ function Home() {
       </p>
 
       <div className="single-user-container">
-        <div className="user-card">
+        <motion.div
+          className="user-card"
+          animate={controls}
+          drag="x"
+          dragConstraints={{ left: 0, right: 0 }}
+          onDragEnd={(_, info) => {
+            const threshold = 100;
+            if (info.offset.x > threshold) {
+              handleMatch();
+            } else if (info.offset.x < -threshold) {
+              handleSkip();
+            } else {
+              controls.start({
+                x: 0,
+                rotate: 0,
+                transition: { type: "spring", stiffness: 500, damping: 30 }
+              });
+            }
+          }}
+          onDrag={(_, info) => {
+            const rotation = info.offset.x * 0.1;
+            controls.set({
+              x: info.offset.x,
+              rotate: rotation
+            });
+          }}
+          whileDrag={{ scale: 1.05 }}
+          style={{ cursor: 'grab' }}
+        >
           <div className="user-info">
             <h2>{currentPotentialMatch.name}</h2>
             <p className="user-bio">{currentPotentialMatch.bio}</p>
@@ -158,7 +215,7 @@ function Home() {
               {actionLoading ? 'Matching...' : 'Match'}
             </button>
           </div>
-        </div>
+        </motion.div>
       </div>
     </div>
   );

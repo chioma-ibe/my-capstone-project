@@ -65,7 +65,7 @@ function Matches() {
     setSelectedPartner(null);
   };
 
-  const handleRatingSubmitted = async (partnerId) => {
+  const handleRatingSubmitted = async (partnerId, ratingScore) => {
     try {
       const ratingInfo = await apiService.getUserRatings(partnerId);
       setMatchRatings(prev => ({
@@ -73,18 +73,10 @@ function Matches() {
         [partnerId]: ratingInfo
       }));
 
-      try {
-        const existingRating = await apiService.getSpecificRating(dbUser.id, partnerId);
-        setUserRatings(prev => ({
-          ...prev,
-          [partnerId]: existingRating
-        }));
-      } catch (err) {
-        setUserRatings(prev => ({
-          ...prev,
-          [partnerId]: null
-        }));
-      }
+      setUserRatings(prev => ({
+        ...prev,
+        [partnerId]: { score: ratingScore }
+      }));
     } catch (err) {
     }
   };
@@ -166,6 +158,7 @@ function Matches() {
         partner={selectedPartner}
         currentUserId={dbUser?.id}
         onRatingSubmitted={handleRatingSubmitted}
+        existingRating={selectedPartner ? userRatings[selectedPartner.id] : null}
       />
     </div>
   );
