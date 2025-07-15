@@ -402,4 +402,124 @@ router.get('/ratings/:userId/:partnerId', async (req, res) => {
   }
 });
 
+router.post('/match-requests', async (req, res) => {
+  try {
+    const { senderId, receiverId } = req.body;
+
+    if (!senderId || !receiverId) {
+      return res.status(400).json({ error: 'Both sender and receiver IDs are required' });
+    }
+
+    if (senderId === receiverId) {
+      return res.status(400).json({ error: 'Cannot send match request to yourself' });
+    }
+
+    const existingMatch = await prisma.match.findFirst({
+      where: {
+        OR: [
+          { user1Id: parseInt(senderId), user2Id: parseInt(receiverId) },
+          { user1Id: parseInt(receiverId), user2Id: parseInt(senderId) }
+        ]
+      }
+    });
+
+    if (existingMatch) {
+      return res.status(409).json({ error: 'Match already exists' });
+    }
+
+    const existingRequest = await prisma.matchRequest.findFirst({
+      where: {
+        OR: [
+          { senderId: parseInt(senderId), receiverId: parseInt(receiverId) },
+          { senderId: parseInt(receiverId), receiverId: parseInt(senderId) }
+        ]
+      }
+    });
+
+    if (existingRequest) {
+      return res.status(409).json({ error: 'Match request already exists' });
+    }
+
+    const matchRequest = await prisma.matchRequest.create({
+      data: {
+        senderId: parseInt(senderId),
+        receiverId: parseInt(receiverId),
+        status: 'PENDING'
+      },
+      include: {
+        sender: true,
+        receiver: true
+      }
+    });
+
+    res.status(201).json(matchRequest);
+  } catch (error) {
+    console.error('Error creating match request:', error);
+    res.status(500).json({ error: 'Failed to create match request' });
+  }
+});
+
+router.get('/match-requests/:userId', async (req, res) => {
+  try {
+    const userId = parseInt(req.params.userId);
+
+    const receivedRequests = await prisma.matchRequest.findMany({
+      where: {
+        receiverId: userId,
+        status: 'PENDING'
+      },
+      include: {
+        sender: {
+          include: {
+            userCourses: {
+              include: {
+                course: true
+              }
+            }
+          }
+        }
+      }
+    });
+
+    res.json(receivedRequests);
+  } catch (error) {
+    console.error('Error fetching match requests:', error);
+    res.status(500).json({ error: 'Failed to fetch match requests' });
+  }
+});
+
+router.put('/match-requests/:requestId', async (req, res) => {
+  try {
+    const requestId = parseInt(req.params.requestId);
+    const { status } = req.body;
+
+    if (!['ACCEPTED', 'REJECTED'].includes(status)) {
+      return res.status(400).json({ error: 'Status must be ACCEPTED or REJECTED' });
+    }
+
+    const matchRequest = await prisma.matchRequest.update({
+      where: { id: requestId },
+      data: { status },
+      include: {
+        sender: true,
+        receiver: true
+      }
+    });
+
+    if (status === 'ACCEPTED') {
+      await prisma.match.create({
+        data: {
+          user1Id: matchRequest.senderId,
+          user2Id: matchRequest.receiverId
+        }
+      });
+    }
+
+    res.json(matchRequest);
+  } catch (error) {
+    console.error('Error updating match request:', error);
+    res.status(500).json({ error: 'Failed to update match request' });
+  }
+});
+
 module.exports = router;
