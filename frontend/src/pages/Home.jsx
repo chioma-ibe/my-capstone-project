@@ -133,7 +133,6 @@ function Home() {
         return prevIndex;
       });
 
-      // Reset card position for next card
       controls.set({ x: 0, rotate: 0, opacity: 1 });
     } finally {
       setActionLoading(false);
