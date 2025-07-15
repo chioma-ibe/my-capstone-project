@@ -197,3 +197,4 @@ cython_debug/
 node_modules/
 package-lock.json
 *.log
+backend/node_modules/
