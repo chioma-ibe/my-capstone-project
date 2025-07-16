@@ -96,6 +96,23 @@ class ApiService {
     return this.request(`/users/ratings/${userId}/${partnerId}`);
   }
 
+  async createMatchRequest(senderId, receiverId) {
+    return this.request('/users/match-requests', {
+      method: 'POST',
+      body: { senderId, receiverId },
+    });
+  }
+
+  async getMatchRequests(userId) {
+    return this.request(`/users/match-requests/${userId}`);
+  }
+
+  async respondToMatchRequest(requestId, status) {
+    return this.request(`/users/match-requests/${requestId}`, {
+      method: 'PUT',
+      body: { status },
+    });
+  }
 }
 
 export default new ApiService();

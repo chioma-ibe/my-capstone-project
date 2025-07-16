@@ -22,6 +22,8 @@ model User {
   calendar       Calendar?
   ratings        Rating[]     @relation("UserRatings")
   ratingsGiven   Rating[]     @relation("PartnerRatings")
+  sentMatchRequests    MatchRequest[] @relation("SentMatchRequests")
+  receivedMatchRequests MatchRequest[] @relation("ReceivedMatchRequests")
 }
 
 model Course {
@@ -71,4 +73,17 @@ model Rating {
   createdAt  DateTime @default(now())
 
   @@unique([userId, partnerId])
+}
+
+model MatchRequest {
+  id         Int      @id @default(autoincrement())
+  sender     User     @relation("SentMatchRequests", fields: [senderId], references: [id])
+  senderId   Int
+  receiver   User     @relation("ReceivedMatchRequests", fields: [receiverId], references: [id])
+  receiverId Int
+  status     String   @default("PENDING") // PENDING, ACCEPTED, REJECTED
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([senderId, receiverId])
 }
