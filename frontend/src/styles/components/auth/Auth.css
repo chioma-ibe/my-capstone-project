@@ -59,6 +59,11 @@
   transition: background-color 0.2s;
 }
 
+.btn-google{
+  background-color: rgb(15, 157, 88);
+  color: white;
+}
+
 .btn-primary {
   background-color: #4a90e2;
   color: white;
