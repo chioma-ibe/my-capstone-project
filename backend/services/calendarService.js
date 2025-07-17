@@ -1,6 +1,6 @@
 const { google } = require('googleapis');
 const { OAuth2Client } = require('google-auth-library');
-const { PrismaClient } = require('@prisma/client');
+const { PrismaClient } = require('../generated/prisma');
 
 const prisma = new PrismaClient();
 
@@ -96,7 +96,6 @@ class CalendarService {
 
       return response.data;
     } catch (error) {
-      console.error('Error creating study session:', error);
       throw error;
     }
   }
@@ -121,7 +120,6 @@ class CalendarService {
 
       return response.data.items;
     } catch (error) {
-      console.error('Error getting study sessions:', error);
       throw error;
     }
   }
@@ -188,7 +186,6 @@ class CalendarService {
 
       return response.data;
     } catch (error) {
-      console.error('Error updating study session:', error);
       throw error;
     }
   }
@@ -219,7 +216,6 @@ class CalendarService {
         });
       }
     } catch (error) {
-      console.error('Error deleting study session:', error);
       throw error;
     }
   }
@@ -244,7 +240,6 @@ class CalendarService {
 
       return response.data;
     } catch (error) {
-      console.error('Error checking availability:', error);
       throw error;
     }
   }
@@ -261,7 +256,6 @@ class CalendarService {
 
       return response.data;
     } catch (error) {
-      console.error('Error getting study session by ID:', error);
       throw error;
     }
   }

@@ -46,7 +46,6 @@ router.post('/sessions', async (req, res) => {
 
     res.status(201).json(createdEvent);
   } catch (error) {
-    console.error('Error creating study session:', error);
 
     if (error.message === 'User not found') {
       return res.status(404).json({ error: 'User not found' });
@@ -83,7 +82,6 @@ router.get('/sessions', async (req, res) => {
     const events = await calendarService.getStudySessions(accessToken, options);
     res.json(events);
   } catch (error) {
-    console.error('Error getting study sessions:', error);
 
     if (error.code === 401 || error.code === 403) {
       return res.status(401).json({
@@ -114,7 +112,6 @@ router.get('/sessions/:eventId', async (req, res) => {
     const event = await calendarService.getStudySessionById(accessToken, eventId);
     res.json(event);
   } catch (error) {
-    console.error('Error getting study session:', error);
 
     if (error.code === 401 || error.code === 403) {
       return res.status(401).json({
@@ -176,7 +173,6 @@ router.put('/sessions/:eventId', async (req, res) => {
 
     res.json(updatedEvent);
   } catch (error) {
-    console.error('Error updating study session:', error);
 
     if (error.message === 'User not found') {
       return res.status(404).json({ error: 'User not found' });
@@ -220,7 +216,6 @@ router.delete('/sessions/:eventId', async (req, res) => {
 
     res.status(204).end();
   } catch (error) {
-    console.error('Error deleting study session:', error);
 
     if (error.code === 401 || error.code === 403) {
       return res.status(401).json({
@@ -262,7 +257,6 @@ router.post('/availability', async (req, res) => {
 
     res.json(availability);
   } catch (error) {
-    console.error('Error checking availability:', error);
 
     if (error.code === 401 || error.code === 403) {
       return res.status(401).json({
