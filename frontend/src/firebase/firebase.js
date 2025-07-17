@@ -15,6 +15,8 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const googleProvider = new GoogleAuthProvider();
 
+googleProvider.addScope('https://www.googleapis.com/auth/calendar');
+googleProvider.addScope('https://www.googleapis.com/auth/calendar.events');
 
 googleProvider.setCustomParameters({
   prompt: 'select_account'
