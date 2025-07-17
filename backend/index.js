@@ -5,7 +5,6 @@ const app = express();
 const userRoutes = require('./routes/users');
 const courseRoutes = require('./routes/courses');
 const userCourseRoutes = require('./routes/userCourses');
-const calendarRoutes = require('./routes/calendar');
 
 const PORT = 3000;
 
@@ -21,10 +20,9 @@ app.get('/', (_, res) => { res.json({ message: 'study buddy' }); });
 app.use('/api/users', userRoutes);
 app.use('/api/courses', courseRoutes);
 app.use('/api/user-courses', userCourseRoutes);
-app.use('/api/calendar', calendarRoutes);
 
 app.use((err, _req, res, _next) => {
   res.status(500).json({ message: 'Something went wrong!', error: err.message });
 });
 
-app.listen(PORT);
+app.listen(PORT, () => {});

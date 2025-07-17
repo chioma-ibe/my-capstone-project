@@ -1,5 +1,5 @@
 import { initializeApp } from "firebase/app";
-import { getAuth, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
+import { getAuth } from "firebase/auth";
 import { getAnalytics } from "firebase/analytics";
 
 const firebaseConfig = {
@@ -13,16 +13,7 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
-const googleProvider = new GoogleAuthProvider();
-
-googleProvider.addScope('https://www.googleapis.com/auth/calendar');
-googleProvider.addScope('https://www.googleapis.com/auth/calendar.events');
-
-googleProvider.setCustomParameters({
-  prompt: 'select_account'
-});
-
 const analytics = getAnalytics(app);
 export const auth = getAuth(app);
-export { analytics, googleProvider, signInWithPopup };
+export { analytics };
 export default app;

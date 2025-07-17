@@ -9,21 +9,21 @@ datasource db {
 }
 
 model User {
-  id                    Int            @id @default(autoincrement())
-  email                 String         @unique
-  password              String
-  profilePhoto          String?
-  name                  String
-  bio                   String?
-  firebaseId            String?        @unique
-  calendar              Calendar?
-  matchesAsUser1        Match[]        @relation("User1Matches")
-  matchesAsUser2        Match[]        @relation("User2Matches")
+  id             Int          @id @default(autoincrement())
+  email          String       @unique
+  password       String
+  firebaseId     String?      @unique
+  profilePhoto   String?
+  name           String
+  bio            String?
+  userCourses    UserCourse[]
+  matchesAsUser1 Match[]      @relation("User1Matches")
+  matchesAsUser2 Match[]      @relation("User2Matches")
+  calendar       Calendar?
+  ratings        Rating[]     @relation("UserRatings")
+  ratingsGiven   Rating[]     @relation("PartnerRatings")
+  sentMatchRequests    MatchRequest[] @relation("SentMatchRequests")
   receivedMatchRequests MatchRequest[] @relation("ReceivedMatchRequests")
-  sentMatchRequests     MatchRequest[] @relation("SentMatchRequests")
-  ratingsGiven          Rating[]       @relation("PartnerRatings")
-  ratings               Rating[]       @relation("UserRatings")
-  userCourses           UserCourse[]
 }
 
 model Course {
@@ -34,55 +34,56 @@ model Course {
 }
 
 model UserCourse {
-  id          Int      @id @default(autoincrement())
-  userId      Int
-  courseId    Int
-  proficiency Int      @default(1)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  course      Course   @relation(fields: [courseId], references: [id])
-  user        User     @relation(fields: [userId], references: [id])
+  id           Int       @id @default(autoincrement())
+  user         User      @relation(fields: [userId], references: [id])
+  userId       Int
+  course       Course    @relation(fields: [courseId], references: [id])
+  courseId     Int
+  proficiency  Int       @default(1)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
 
   @@unique([userId, courseId])
 }
 
 model Match {
-  id        Int      @id @default(autoincrement())
-  user1Id   Int
-  user2Id   Int
-  matchedAt DateTime @default(now())
-  user1     User     @relation("User1Matches", fields: [user1Id], references: [id])
-  user2     User     @relation("User2Matches", fields: [user2Id], references: [id])
+  id         Int      @id @default(autoincrement())
+  user1      User     @relation("User1Matches", fields: [user1Id], references: [id])
+  user1Id    Int
+  user2      User     @relation("User2Matches", fields: [user2Id], references: [id])
+  user2Id    Int
+  matchedAt  DateTime @default(now())
 }
 
+
 model Calendar {
-  id     Int    @id @default(autoincrement())
-  userId Int    @unique
-  events String
-  user   User   @relation(fields: [userId], references: [id])
+  id       Int      @id @default(autoincrement())
+  user     User     @relation(fields: [userId], references: [id])
+  userId   Int      @unique
+  events   String
 }
 
 model Rating {
-  id        Int      @id @default(autoincrement())
-  userId    Int
-  partnerId Int
-  score     Int
-  createdAt DateTime @default(now())
-  partner   User     @relation("PartnerRatings", fields: [partnerId], references: [id])
-  user      User     @relation("UserRatings", fields: [userId], references: [id])
+  id         Int      @id @default(autoincrement())
+  user       User     @relation("UserRatings", fields: [userId], references: [id])
+  userId     Int
+  partner    User     @relation("PartnerRatings", fields: [partnerId], references: [id])
+  partnerId  Int
+  score      Int
+  createdAt  DateTime @default(now())
 
   @@unique([userId, partnerId])
 }
 
 model MatchRequest {
   id         Int      @id @default(autoincrement())
+  sender     User     @relation("SentMatchRequests", fields: [senderId], references: [id])
   senderId   Int
+  receiver   User     @relation("ReceivedMatchRequests", fields: [receiverId], references: [id])
   receiverId Int
-  status     String   @default("PENDING")
+  status     String   @default("PENDING") // PENDING, ACCEPTED, REJECTED
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
-  receiver   User     @relation("ReceivedMatchRequests", fields: [receiverId], references: [id])
-  sender     User     @relation("SentMatchRequests", fields: [senderId], references: [id])
 
   @@unique([senderId, receiverId])
 }

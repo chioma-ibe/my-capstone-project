@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useState } from 'react';
-import { onAuthStateChanged, signInWithEmailAndPassword, signOut, createUserWithEmailAndPassword, GoogleAuthProvider } from 'firebase/auth';
-import { auth, googleProvider, signInWithPopup } from '../firebase/firebase';
+import { onAuthStateChanged, signInWithEmailAndPassword, signOut, createUserWithEmailAndPassword } from 'firebase/auth';
+import { auth } from '../firebase/firebase';
 import apiService from '../services/api';
 
 const AuthContext = createContext();
@@ -14,9 +14,6 @@ export function FirebaseAuthProvider({ children }) {
   const [dbUser, setDbUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [authError, setAuthError] = useState('');
-  const [googleToken, setGoogleToken] = useState(() => {
-    return localStorage.getItem('googleToken') || null;
-  });
 
   async function registerUser(email, password) {
     try {
@@ -38,33 +35,9 @@ export function FirebaseAuthProvider({ children }) {
     }
   }
 
-  async function signInWithGoogle() {
-    try {
-      setAuthError('');
-      const result = await signInWithPopup(auth, googleProvider);
-
-      const credential = GoogleAuthProvider.credentialFromResult(result);
-
-      const token = credential?.accessToken || null;
-
-      if (token) {
-        localStorage.setItem('googleToken', token);
-      }
-
-      setGoogleToken(token);
-
-      return result;
-    } catch (error) {
-      setAuthError(error.message);
-      throw error;
-    }
-  }
-
   async function signOutUser() {
     try {
       setAuthError('');
-      localStorage.removeItem('googleToken');
-      setGoogleToken(null);
       return await signOut(auth);
     } catch (error) {
       setAuthError(error.message);
@@ -84,6 +57,7 @@ export function FirebaseAuthProvider({ children }) {
           setUser(user);
           setDbUser(backendUser.user);
         } catch (error) {
+          console.error('Failed to authenticate user with backend:', error);
           setUser(user);
           setDbUser(null);
         }
@@ -103,10 +77,8 @@ export function FirebaseAuthProvider({ children }) {
     login: signInUser,
     signup: registerUser,
     logout: signOutUser,
-    signInWithGoogle,
     authError,
-    setAuthError,
-    googleToken
+    setAuthError
   };
 
   return (

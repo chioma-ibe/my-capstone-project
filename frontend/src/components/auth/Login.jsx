@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
-import GoogleSignInButton from './GoogleSignInButton';
 import '../../styles/components/auth/Auth.css';
 
 function Login() {
@@ -56,8 +55,6 @@ function Login() {
             Login
           </button>
         </form>
-        <span>OR</span>
-        <GoogleSignInButton />
         <div className="auth-links">
           <div>
             Need an account? <Link to="/signup">Sign Up</Link>

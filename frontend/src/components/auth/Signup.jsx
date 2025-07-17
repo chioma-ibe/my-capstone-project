@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
-import GoogleSignInButton from './GoogleSignInButton';
 
 function Signup() {
   const [name, setName] = useState('');
@@ -87,8 +86,6 @@ function Signup() {
             {loading ? 'Creating Account...' : 'Sign Up'}
           </button>
         </form>
-        <span> OR </span>
-        <GoogleSignInButton />
         <div className="auth-links">
           <div>
             Already have an account? <Link to="/login">Log In</Link>
