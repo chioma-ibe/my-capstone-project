@@ -1,15 +1,21 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import calendarClient from '../services/calendarClient';
+import SessionDetailsModal from '../components/calendar/SessionDetailsModal';
+import CreateSessionModal from '../components/calendar/CreateSessionModal';
+import '../styles/pages/Calendar.css';
 
 function Calendar() {
-  const { currentUser, googleToken, signInWithGoogle } = useAuth();
+  const { currentUser, googleToken, signInWithGoogle, dbUser } = useAuth();
   const [sessions, setSessions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [selectedSession, setSelectedSession] = useState(null);
+  const [detailsModalOpen, setDetailsModalOpen] = useState(false);
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
 
-  useEffect(() => {
-    const fetchStudySessions = async () => {
+  const fetchStudySessions = async () => {
       if (!googleToken) {
         setError('Google authentication required to access calendar');
         setLoading(false);
@@ -24,8 +30,7 @@ function Calendar() {
 
         const options = {
           timeMin: now.toISOString(),
-          timeMax: thirtyDaysLater.toISOString(),
-          query: ''
+          timeMax: thirtyDaysLater.toISOString()
         };
 
         const studySessions = await calendarClient.getStudySessions(googleToken, options);
@@ -44,8 +49,10 @@ function Calendar() {
       }
     };
 
+  useEffect(() => {
     fetchStudySessions();
-  }, [googleToken]);
+  }, [googleToken, refreshTrigger]);
+
 
   if (loading) {
     return (
@@ -86,16 +93,54 @@ function Calendar() {
     );
   }
 
+  const handleViewDetails = (session) => {
+    setSelectedSession(session);
+    setDetailsModalOpen(true);
+  };
+
+  const handleEdit = (session) => {
+    setSelectedSession(session);
+    setEditModalOpen(true);
+  };
+
+  const handleDelete = async (eventId) => {
+    try {
+      setLoading(true);
+      await calendarClient.deleteStudySession(googleToken, eventId, dbUser.id);
+      setRefreshTrigger(prev => prev + 1);
+    } catch (err) {
+      setError('Failed to delete study session');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSessionUpdated = async (eventId, sessionDetails) => {
+    try {
+      await calendarClient.updateStudySession(googleToken, eventId, sessionDetails);
+      setRefreshTrigger(prev => prev + 1);
+    } catch (err) {
+      setError('Failed to update study session');
+      throw err;
+    }
+  };
+
+  const handleCloseDetailsModal = () => {
+    setDetailsModalOpen(false);
+    setSelectedSession(null);
+  };
+
+  const handleCloseEditModal = () => {
+    setEditModalOpen(false);
+    setSelectedSession(null);
+  };
+
   return (
     <div className="calendar-container">
       <h1>Study Sessions Calendar</h1>
       <p className="calendar-description">
         View and manage your upcoming study sessions
       </p>
-
-      <div className="calendar-actions">
-        <button className="create-session-btn">Create New Study Session</button>
-      </div>
 
       <div className="sessions-list">
         <h2>Upcoming Sessions</h2>
@@ -133,15 +178,47 @@ function Calendar() {
                   <p className="session-location">Location: {session.location}</p>
                 )}
                 <div className="session-actions">
-                  <button className="view-btn">View Details</button>
-                  <button className="edit-btn">Edit</button>
-                  <button className="delete-btn">Delete</button>
+                  <button
+                    className="view-btn"
+                    onClick={() => handleViewDetails(session)}
+                  >
+                    View Details
+                  </button>
+                  <button
+                    className="edit-btn"
+                    onClick={() => handleEdit(session)}
+                  >
+                    Edit
+                  </button>
+                  <button
+                    className="delete-btn"
+                    onClick={() => handleDelete(session.id)}
+                  >
+                    Delete
+                  </button>
                 </div>
               </li>
             ))}
           </ul>
         )}
       </div>
+
+      {detailsModalOpen && selectedSession && (
+        <SessionDetailsModal
+          session={selectedSession}
+          onClose={handleCloseDetailsModal}
+          onEdit={handleEdit}
+          onDelete={handleDelete}
+        />
+      )}
+
+      {editModalOpen && selectedSession && (
+        <CreateSessionModal
+          existingSession={selectedSession}
+          onClose={handleCloseEditModal}
+          onSessionUpdated={handleSessionUpdated}
+        />
+      )}
     </div>
   );
 }
