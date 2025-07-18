@@ -4,6 +4,7 @@ import Navbar from './components/layout/Navbar';
 import Home from './pages/Home';
 import Profile from './pages/Profile';
 import Matches from './pages/Matches';
+import Calendar from './pages/Calendar';
 import Login from './components/auth/Login';
 import Signup from './components/auth/Signup';
 import PrivateRoute from './components/auth/PrivateRoute';
@@ -41,6 +42,14 @@ function App() {
                 element={
                   <PrivateRoute>
                     <Matches />
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="/calendar"
+                element={
+                  <PrivateRoute>
+                    <Calendar />
                   </PrivateRoute>
                 }
               />
