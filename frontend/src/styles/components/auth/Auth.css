@@ -15,30 +15,12 @@
   width: 100%;
   max-width: 400px;
 }
-
-.auth-form-container h2 {
-  margin-bottom: 24px;
-  text-align: center;
-  color: #333;
-}
-
-.form-group {
-  margin-bottom: 20px;
-}
-
-.form-group label {
-  display: block;
-  margin-bottom: 8px;
-  font-weight: 500;
-  color: #555;
-}
-
-.form-group input {
-  width: 100%;
-  padding: 10px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  font-size: 16px;
+.auth-form-container span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 15px 0;
+  color: #656262;
 }
 
 .form-group input:focus {
@@ -57,6 +39,11 @@
   font-weight: 500;
   cursor: pointer;
   transition: background-color 0.2s;
+}
+
+.btn-google{
+  background-color: rgb(15, 157, 88);
+  color: white;
 }
 
 .btn-primary {
