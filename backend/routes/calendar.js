@@ -2,10 +2,22 @@ const express = require('express');
 const router = express.Router();
 const calendarService = require('../services/calendarService');
 
+const extractToken = (req, res, next) => {
+  const authHeader = req.headers.authorization;
+
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({ error: 'Access token is required' });
+  }
+
+  req.accessToken = authHeader.split(' ')[1];
+  next();
+};
+
+router.use(extractToken);
+
 router.post('/sessions', async (req, res) => {
   try {
     const {
-      accessToken,
       userId,
       startTime,
       endTime,
@@ -17,9 +29,7 @@ router.post('/sessions', async (req, res) => {
       includeConference
     } = req.body;
 
-    if (!accessToken) {
-      return res.status(401).json({ error: 'Access token is required' });
-    }
+    const accessToken = req.accessToken;
 
     if (!userId || !startTime || !endTime) {
       return res.status(400).json({
@@ -66,17 +76,14 @@ router.post('/sessions', async (req, res) => {
 
 router.get('/sessions', async (req, res) => {
   try {
-    const { accessToken, timeMin, timeMax, maxResults, query } = req.query;
-
-    if (!accessToken) {
-      return res.status(401).json({ error: 'Access token is required' });
-    }
+    const { timeMin, timeMax, maxResults, query } = req.query;
+    const accessToken = req.accessToken;
 
     const options = {
       timeMin,
       timeMax,
       maxResults: maxResults ? parseInt(maxResults) : undefined,
-      query
+      ...(query ? { query } : {})
     };
 
     const events = await calendarService.getStudySessions(accessToken, options);
@@ -99,11 +106,7 @@ router.get('/sessions', async (req, res) => {
 router.get('/sessions/:eventId', async (req, res) => {
   try {
     const { eventId } = req.params;
-    const { accessToken } = req.query;
-
-    if (!accessToken) {
-      return res.status(401).json({ error: 'Access token is required' });
-    }
+    const accessToken = req.accessToken;
 
     if (!eventId) {
       return res.status(400).json({ error: 'Event ID is required' });
@@ -134,7 +137,6 @@ router.put('/sessions/:eventId', async (req, res) => {
   try {
     const { eventId } = req.params;
     const {
-      accessToken,
       userId,
       startTime,
       endTime,
@@ -145,9 +147,7 @@ router.put('/sessions/:eventId', async (req, res) => {
       timeZone
     } = req.body;
 
-    if (!accessToken) {
-      return res.status(401).json({ error: 'Access token is required' });
-    }
+    const accessToken = req.accessToken;
 
     if (!userId) {
       return res.status(400).json({ error: 'User ID is required' });
@@ -198,11 +198,8 @@ router.put('/sessions/:eventId', async (req, res) => {
 router.delete('/sessions/:eventId', async (req, res) => {
   try {
     const { eventId } = req.params;
-    const { accessToken, userId } = req.body;
-
-    if (!accessToken) {
-      return res.status(401).json({ error: 'Access token is required' });
-    }
+    const { userId } = req.body;
+    const accessToken = req.accessToken;
 
     if (!userId) {
       return res.status(400).json({ error: 'User ID is required' });
@@ -236,11 +233,8 @@ router.delete('/sessions/:eventId', async (req, res) => {
 
 router.post('/availability', async (req, res) => {
   try {
-    const { accessToken, startTime, endTime, attendeeEmails } = req.body;
-
-    if (!accessToken) {
-      return res.status(401).json({ error: 'Access token is required' });
-    }
+    const { startTime, endTime, attendeeEmails } = req.body;
+    const accessToken = req.accessToken;
 
     if (!startTime || !endTime) {
       return res.status(400).json({
