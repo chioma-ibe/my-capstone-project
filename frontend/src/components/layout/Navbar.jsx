@@ -3,7 +3,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import '../../styles/components/layout/Navbar.css';
 
 function Navbar() {
-  const { currentUser, logout } = useAuth();
+  const { currentUser, logout, setAuthError } = useAuth();
   const navigate = useNavigate();
 
   const handleLogout = async () => {
@@ -11,7 +11,7 @@ function Navbar() {
       await logout();
       navigate('/login');
     } catch (error) {
-      console.error('Failed to log out:', error);
+      setAuthError('Failed log out');
     }
   };
 
@@ -37,6 +37,11 @@ function Navbar() {
             <li className="nav-item">
               <Link to="/matches" className="nav-link">
                 Matches
+              </Link>
+            </li>
+            <li className="nav-item">
+              <Link to="/calendar" className="nav-link">
+                Calendar
               </Link>
             </li>
           </ul>
