@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import UserCourses from '../components/UserCourses';
 import CourseSelector from '../components/CourseSelector';
+import Spinner from '../components/spinner/Spinner';
 import '../styles/pages/Profile.css';
 
 function Profile() {
@@ -13,7 +14,13 @@ function Profile() {
   };
 
   if (loading) {
-    return <div>Loading profile...</div>;
+    return (
+      <div className="profile-container">
+        <div className="page-loading">
+          <Spinner />
+        </div>
+      </div>
+    );
   }
 
   if (!currentUser) {
@@ -21,7 +28,14 @@ function Profile() {
   }
 
   if (!dbUser) {
-    return <div>Setting up your profile...</div>;
+    return (
+      <div className="profile-container">
+        <div className="page-loading">
+          <Spinner />
+          <p>Setting up your profile...</p>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -31,7 +45,6 @@ function Profile() {
           <h1>{dbUser.name || currentUser.displayName || currentUser.email}</h1>
           <p className="profile-email">{dbUser.email}</p>
           <p className="profile-bio">{dbUser.bio || ''}</p>
-          <button className="edit-profile-btn">Edit Profile</button>
         </div>
       </div>
 

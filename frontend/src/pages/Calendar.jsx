@@ -3,6 +3,7 @@ import { useAuth } from '../contexts/AuthContext';
 import calendarClient from '../services/calendarClient';
 import SessionDetailsModal from '../components/calendar/SessionDetailsModal';
 import CreateSessionModal from '../components/calendar/CreateSessionModal';
+import Spinner from '../components/spinner/Spinner';
 import '../styles/pages/Calendar.css';
 
 function Calendar() {
@@ -57,7 +58,9 @@ function Calendar() {
   if (loading) {
     return (
       <div className="calendar-container">
-        <div>Loading your study sessions...</div>
+        <div className="page-loading">
+          <Spinner />
+        </div>
       </div>
     );
   }

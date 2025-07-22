@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import apiService from '../services/api';
+import Spinner from './spinner/Spinner';
 import '../styles/components/CourseSelector.css';
 
 const proficiencyOptions = [
@@ -76,7 +77,7 @@ function CourseSelector({ userId, onCourseAdded }) {
   };
 
 
-  if (loading) return <div>Loading courses...</div>;
+  if (loading) return <Spinner />;
   if (!courses.length) return <div>No courses available.</div>;
 
   return (
