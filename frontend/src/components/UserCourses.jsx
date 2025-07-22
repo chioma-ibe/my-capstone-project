@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import apiService from '../services/api';
+import Spinner from './spinner/Spinner';
 import '../styles/components/UserCourses.css';
 
 const getProficiencyLabel = (level) => {
@@ -91,7 +92,7 @@ function UserCourses({ userId }) {
     }
   };
 
-  if (loading) return <div>Loading courses...</div>;
+  if (loading) return <Spinner />;
   if (error) return <div>Error: {error}</div>;
   if (!userCourses.length) return <div>No courses added yet.</div>;
 

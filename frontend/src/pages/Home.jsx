@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import apiService from '../services/api';
+import Spinner from '../components/spinner/Spinner';
 import '../styles/pages/Home.css';
 import { motion, useAnimation } from 'framer-motion';
 
@@ -37,7 +38,9 @@ function Home() {
   if (loading) {
     return (
       <div className="home-container">
-        <div>Loading potential matches...</div>
+        <div className="page-loading">
+          <Spinner />
+        </div>
       </div>
     );
   }
