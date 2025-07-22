@@ -49,7 +49,6 @@ router.post('/firebase-auth', async (req, res) => {
 
     res.json({ user });
   } catch (error) {
-    console.error('Firebase auth error:', error);
     res.status(500).json({ error: 'Failed to authenticate user' });
   }
 });
@@ -97,6 +96,13 @@ router.get('/potential-matches/:userId', async (req, res) => {
     );
 
     const excludedUserIds = [...matchedUserIds, userId];
+    const pendingRequests = await prisma.matchRequest.findMany({
+      where: {
+        receiverId: userId,
+        status: 'PENDING'
+      }
+    });
+    const pendingRequestSenderIds = pendingRequests.map(req => req.senderId);
 
     const potentialMatches = await prisma.user.findMany({
       where: {
@@ -120,16 +126,18 @@ router.get('/potential-matches/:userId', async (req, res) => {
       }
     });
 
-    const calculateMatchingScore = (currentUser, potentialMatch) => {
+    const calculateMatchingScore = (currentUser, potentialMatch, hasPendingRequest = false) => {
       const weights = {
-        courseOverlap: 0.4,
-        proficiencyBalance: 0.3,
-        averageRating: 0.3
+        courseOverlap: 0.35,
+        proficiencyBalance: 0.25,
+        averageRating: 0.25,
+        pendingRequest: 0.15
       };
 
       let courseOverlapScore = 0;
       let proficiencyBalanceScore = 0;
       let averageRatingScore = 0;
+      let pendingRequestScore = hasPendingRequest ? 1 : 0;
 
       const currentUserCourseIds = new Set(currentUser.userCourses.map(uc => uc.courseId));
       const potentialMatchCourseIds = new Set(potentialMatch.userCourses.map(uc => uc.courseId));
@@ -168,7 +176,8 @@ router.get('/potential-matches/:userId', async (req, res) => {
       const totalScore =
         (courseOverlapScore * weights.courseOverlap) +
         (proficiencyBalanceScore * weights.proficiencyBalance) +
-        (averageRatingScore * weights.averageRating);
+        (averageRatingScore * weights.averageRating) +
+        (pendingRequestScore * weights.pendingRequest);
 
       return Math.round(totalScore * 100) / 100;
     };
@@ -179,6 +188,8 @@ router.get('/potential-matches/:userId', async (req, res) => {
           ? user.ratings.reduce((sum, rating) => sum + rating.score, 0) / user.ratings.length
           : 0;
 
+        const hasPendingRequest = pendingRequestSenderIds.includes(user.id);
+
         return {
           id: user.id,
           name: user.name,
@@ -186,9 +197,10 @@ router.get('/potential-matches/:userId', async (req, res) => {
           bio: user.bio,
           profilePhoto: user.profilePhoto,
           matchedAt: new Date().toISOString().split('T')[0],
-          matchingScore: calculateMatchingScore(currentUser, user),
+          matchingScore: calculateMatchingScore(currentUser, user, hasPendingRequest),
           averageRating: Math.round(averageRating * 10) / 10,
           totalRatings: user.ratings.length,
+          hasPendingRequest: hasPendingRequest,
           sharedCourses: user.userCourses.map(uc => ({
             id: uc.course.id,
             name: uc.course.name,
@@ -201,7 +213,6 @@ router.get('/potential-matches/:userId', async (req, res) => {
 
     res.json(matchesWithSharedCourses);
   } catch (error) {
-    console.error('Error fetching potential matches:', error);
     res.status(500).json({ error: 'Failed to fetch potential matches' });
   }
 });
@@ -244,7 +255,6 @@ router.post('/matches', async (req, res) => {
 
     res.status(201).json(match);
   } catch (error) {
-    console.error('Error creating match:', error);
     res.status(500).json({ error: 'Failed to create match' });
   }
 });
@@ -326,7 +336,6 @@ router.get('/confirmed-matches/:userId', async (req, res) => {
 
     res.json(confirmedMatches);
   } catch (error) {
-    console.error('Error fetching confirmed matches:', error);
     res.status(500).json({ error: 'Failed to fetch confirmed matches' });
   }
 });
@@ -354,7 +363,6 @@ router.post('/ratings', async (req, res) => {
 
     res.json(rating);
   } catch (error) {
-    console.error('Error creating rating:', error);
     res.status(500).json({ error: 'Failed to create rating' });
   }
 });
@@ -427,12 +435,18 @@ router.post('/match-requests', async (req, res) => {
       return res.status(409).json({ error: 'Match already exists' });
     }
 
+    await prisma.matchRequest.findFirst({
+      where: {
+        senderId: parseInt(receiverId),
+        receiverId: parseInt(senderId),
+        status: 'PENDING'
+      }
+    });
+
     const existingRequest = await prisma.matchRequest.findFirst({
       where: {
-        OR: [
-          { senderId: parseInt(senderId), receiverId: parseInt(receiverId) },
-          { senderId: parseInt(receiverId), receiverId: parseInt(senderId) }
-        ]
+        senderId: parseInt(senderId),
+        receiverId: parseInt(receiverId)
       }
     });
 
@@ -454,7 +468,6 @@ router.post('/match-requests', async (req, res) => {
 
     res.status(201).json(matchRequest);
   } catch (error) {
-    console.error('Error creating match request:', error);
     res.status(500).json({ error: 'Failed to create match request' });
   }
 });
@@ -483,7 +496,6 @@ router.get('/match-requests/:userId', async (req, res) => {
 
     res.json(receivedRequests);
   } catch (error) {
-    console.error('Error fetching match requests:', error);
     res.status(500).json({ error: 'Failed to fetch match requests' });
   }
 });
@@ -517,7 +529,6 @@ router.put('/match-requests/:requestId', async (req, res) => {
 
     res.json(matchRequest);
   } catch (error) {
-    console.error('Error updating match request:', error);
     res.status(500).json({ error: 'Failed to update match request' });
   }
 });

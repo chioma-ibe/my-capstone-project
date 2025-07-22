@@ -142,7 +142,9 @@ function Matches() {
           {matches.map((match) => (
             <div key={match.id} className="match-card">
               <div className="match-info">
-                <h2>{match.name}</h2>
+                <div className="match-header">
+                  <h2>{match.name}</h2>
+                </div>
                 <p className="match-email">{match.email}</p>
                 {matchRatings[match.id] && (
                   <div className="match-rating">
