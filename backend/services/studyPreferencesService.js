@@ -8,7 +8,16 @@ async function getStudyPreferences(userId) {
 }
 
 async function createOrUpdateStudyPreferences(userId, preferencesData) {
-  const { preferredDays, preferredTimeRanges, preferBackToBack, maxSessionsPerWeek, sessionDuration } = preferencesData;
+  const {
+    preferredDays,
+    preferredTimeRanges,
+    preferBackToBack,
+    maxSessionsPerWeek,
+    sessionDuration,
+    weightCourseOverlap,
+    weightProficiencyBalance,
+    weightUserRating
+  } = preferencesData;
 
   return prisma.studyPreferences.upsert({
     where: { userId: parseInt(userId) },
@@ -17,7 +26,10 @@ async function createOrUpdateStudyPreferences(userId, preferencesData) {
       preferredTimeRanges: JSON.stringify(preferredTimeRanges),
       preferBackToBack,
       maxSessionsPerWeek,
-      sessionDuration
+      sessionDuration,
+      weightCourseOverlap: weightCourseOverlap !== undefined ? weightCourseOverlap : 0.50,
+      weightProficiencyBalance: weightProficiencyBalance !== undefined ? weightProficiencyBalance : 0.30,
+      weightUserRating: weightUserRating !== undefined ? weightUserRating : 0.20
     },
     create: {
       userId: parseInt(userId),
@@ -25,7 +37,10 @@ async function createOrUpdateStudyPreferences(userId, preferencesData) {
       preferredTimeRanges: JSON.stringify(preferredTimeRanges),
       preferBackToBack,
       maxSessionsPerWeek,
-      sessionDuration
+      sessionDuration,
+      weightCourseOverlap: weightCourseOverlap !== undefined ? weightCourseOverlap : 0.50,
+      weightProficiencyBalance: weightProficiencyBalance !== undefined ? weightProficiencyBalance : 0.30,
+      weightUserRating: weightUserRating !== undefined ? weightUserRating : 0.20
     }
   });
 }

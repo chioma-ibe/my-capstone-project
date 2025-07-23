@@ -136,10 +136,19 @@ router.get('/potential-matches/:userId', async (req, res) => {
     });
 
     const calculateMatchingScore = (currentUser, potentialMatch, hasPendingRequest = false) => {
+      const userWeights = {
+        courseOverlap: currentUserPreferences?.weightCourseOverlap || 0.40,
+        proficiencyBalance: currentUserPreferences?.weightProficiencyBalance || 0.30,
+        userRating: currentUserPreferences?.weightUserRating || 0.30
+      };
+
+      const totalUserWeight = userWeights.courseOverlap + userWeights.proficiencyBalance + userWeights.userRating;
+      const normalizationFactor = 0.7 / totalUserWeight;
+
       const weights = {
-        courseOverlap: 0.30,
-        proficiencyBalance: 0.20,
-        averageRating: 0.20,
+        courseOverlap: userWeights.courseOverlap * normalizationFactor,
+        proficiencyBalance: userWeights.proficiencyBalance * normalizationFactor,
+        averageRating: userWeights.userRating * normalizationFactor,
         pendingRequest: 0.10,
         schedulingPreference: 0.20
       };

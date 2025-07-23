@@ -9,21 +9,21 @@ datasource db {
 }
 
 model User {
-  id                    Int            @id @default(autoincrement())
-  email                 String         @unique
+  id                    Int               @id @default(autoincrement())
+  email                 String            @unique
   password              String
   profilePhoto          String?
   name                  String
   bio                   String?
-  firebaseId            String?        @unique
+  firebaseId            String?           @unique
   calendar              Calendar?
+  matchesAsUser1        Match[]           @relation("User1Matches")
+  matchesAsUser2        Match[]           @relation("User2Matches")
+  receivedMatchRequests MatchRequest[]    @relation("ReceivedMatchRequests")
+  sentMatchRequests     MatchRequest[]    @relation("SentMatchRequests")
+  ratingsGiven          Rating[]          @relation("PartnerRatings")
+  ratings               Rating[]          @relation("UserRatings")
   studyPreferences      StudyPreferences?
-  matchesAsUser1        Match[]          @relation("User1Matches")
-  matchesAsUser2        Match[]          @relation("User2Matches")
-  receivedMatchRequests MatchRequest[]   @relation("ReceivedMatchRequests")
-  sentMatchRequests     MatchRequest[]   @relation("SentMatchRequests")
-  ratingsGiven          Rating[]         @relation("PartnerRatings")
-  ratings               Rating[]         @relation("UserRatings")
   userCourses           UserCourse[]
 }
 
@@ -89,14 +89,17 @@ model MatchRequest {
 }
 
 model StudyPreferences {
-  id                Int      @id @default(autoincrement())
-  userId            Int      @unique
-  preferredDays     String   // JSON array of preferred days (e.g., ["MONDAY", "WEDNESDAY"])
-  preferredTimeRanges String  // JSON array of time ranges (e.g., [{"start": "09:00", "end": "12:00"}])
-  preferBackToBack  Boolean  @default(false)
-  maxSessionsPerWeek Int     @default(5)
-  sessionDuration   Int      @default(60)  // in minutes
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
-  user              User     @relation(fields: [userId], references: [id])
+  id                       Int      @id @default(autoincrement())
+  userId                   Int      @unique
+  preferredDays            String
+  preferredTimeRanges      String
+  preferBackToBack         Boolean  @default(false)
+  maxSessionsPerWeek       Int      @default(5)
+  sessionDuration          Int      @default(60)
+  createdAt                DateTime @default(now())
+  updatedAt                DateTime @updatedAt
+  weightCourseOverlap      Float    @default(0.50)
+  weightProficiencyBalance Float    @default(0.30)
+  weightUserRating         Float    @default(0.20)
+  user                     User     @relation(fields: [userId], references: [id])
 }

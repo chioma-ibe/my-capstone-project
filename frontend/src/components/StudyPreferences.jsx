@@ -12,7 +12,10 @@ function StudyPreferences({ userId }) {
     preferredTimeRanges: [{ start: '09:00', end: '17:00' }],
     preferBackToBack: false,
     maxSessionsPerWeek: 3,
-    sessionDuration: 60
+    sessionDuration: 60,
+    weightCourseOverlap: 0.40,
+    weightProficiencyBalance: 0.30,
+    weightUserRating: 0.30
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -28,10 +31,14 @@ function StudyPreferences({ userId }) {
             preferredTimeRanges: data.preferredTimeRanges || [{ start: '09:00', end: '17:00' }],
             preferBackToBack: data.preferBackToBack || false,
             maxSessionsPerWeek: data.maxSessionsPerWeek || 3,
-            sessionDuration: data.sessionDuration || 60
+            sessionDuration: data.sessionDuration || 60,
+            weightCourseOverlap: data.weightCourseOverlap || 0.40,
+            weightProficiencyBalance: data.weightProficiencyBalance || 0.30,
+            weightUserRating: data.weightUserRating || 0.30
           });
         }
       } catch (error) {
+        console.error("Error fetching preferences:", error);
       } finally {
         setLoading(false);
       }
@@ -91,6 +98,51 @@ function StudyPreferences({ userId }) {
     setPreferences(prev => ({
       ...prev,
       [field]: field === 'preferBackToBack' ? value : Number(value)
+    }));
+  };
+
+  const getRankForFactor = (factor) => {
+    const weights = {
+      courseOverlap: preferences.weightCourseOverlap,
+      proficiencyBalance: preferences.weightProficiencyBalance,
+      userRating: preferences.weightUserRating
+    };
+
+    const sortedFactors = Object.entries(weights).sort((a, b) => b[1] - a[1]);
+
+    const position = sortedFactors.findIndex(([key]) => key === factor);
+
+    return position + 1;
+  };
+
+  const handleRankChange = (factor, newRank) => {
+    const currentRanks = {
+      courseOverlap: getRankForFactor('courseOverlap'),
+      proficiencyBalance: getRankForFactor('proficiencyBalance'),
+      userRating: getRankForFactor('userRating')
+    };
+
+    const factorWithTargetRank = Object.entries(currentRanks).find(([key, rank]) => rank === newRank && key !== factor)?.[0];
+
+    const currentRank = currentRanks[factor];
+
+    const newWeights = {
+      weightCourseOverlap: preferences.weightCourseOverlap,
+      weightProficiencyBalance: preferences.weightProficiencyBalance,
+      weightUserRating: preferences.weightUserRating
+    };
+
+    const weightMap = {1: 0.5, 2: 0.3, 3: 0.2};
+
+    newWeights[`weight${factor.charAt(0).toUpperCase() + factor.slice(1)}`] = weightMap[newRank];
+
+    if (factorWithTargetRank) {
+      newWeights[`weight${factorWithTargetRank.charAt(0).toUpperCase() + factorWithTargetRank.slice(1)}`] = weightMap[currentRank];
+    }
+
+    setPreferences(prev => ({
+      ...prev,
+      ...newWeights
     }));
   };
 
@@ -207,6 +259,54 @@ function StudyPreferences({ userId }) {
                 ))}
               </select>
             </label>
+          </div>
+        </div>
+
+        <div className="preference-section">
+          <h3>Matching Preferences</h3>
+          <p className="matching-description">
+            Rank these factors from 1 (most important) to 3 (least important) to customize how we find your study partners.
+          </p>
+
+          <div className="ranking-container">
+            <div className="ranking-item">
+              <label>Shared Courses (how many courses you share with potential matches) </label>
+              <select
+                value={getRankForFactor('courseOverlap')}
+                onChange={(e) => handleRankChange('courseOverlap', parseInt(e.target.value))}
+                className="ranking-select"
+              >
+                <option value="1">1 (Most Important)</option>
+                <option value="2">2 (Important)</option>
+                <option value="3">3 (Least Important)</option>
+              </select>
+            </div>
+
+            <div className="ranking-item">
+              <label>Proficiency Balance (How closely potential matches proficiency is to yours)</label>
+              <select
+                value={getRankForFactor('proficiencyBalance')}
+                onChange={(e) => handleRankChange('proficiencyBalance', parseInt(e.target.value))}
+                className="ranking-select"
+              >
+                <option value="1">1 (Most Important)</option>
+                <option value="2">2 (Important)</option>
+                <option value="3">3 (Least Important)</option>
+              </select>
+            </div>
+
+            <div className="ranking-item">
+              <label>User Ratings (How well rated your potential match is) </label>
+              <select
+                value={getRankForFactor('userRating')}
+                onChange={(e) => handleRankChange('userRating', parseInt(e.target.value))}
+                className="ranking-select"
+              >
+                <option value="1">1 (Most Important)</option>
+                <option value="2">2 (Important)</option>
+                <option value="3">3 (Least Important)</option>
+              </select>
+            </div>
           </div>
         </div>
 
