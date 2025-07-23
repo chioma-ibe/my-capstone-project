@@ -135,125 +135,143 @@ router.get('/potential-matches/:userId', async (req, res) => {
       where: { userId: userId }
     });
 
-    const calculateMatchingScore = (currentUser, potentialMatch, hasPendingRequest = false) => {
+    const getNormalizedWeights = (userPreferences) => {
       const userWeights = {
-        courseOverlap: currentUserPreferences?.weightCourseOverlap || 0.40,
-        proficiencyBalance: currentUserPreferences?.weightProficiencyBalance || 0.30,
-        userRating: currentUserPreferences?.weightUserRating || 0.30
+        courseOverlap: userPreferences?.weightCourseOverlap || 0.40,
+        proficiencyBalance: userPreferences?.weightProficiencyBalance || 0.30,
+        userRating: userPreferences?.weightUserRating || 0.30
       };
 
       const totalUserWeight = userWeights.courseOverlap + userWeights.proficiencyBalance + userWeights.userRating;
       const normalizationFactor = 0.7 / totalUserWeight;
 
-      const weights = {
+      return {
         courseOverlap: userWeights.courseOverlap * normalizationFactor,
         proficiencyBalance: userWeights.proficiencyBalance * normalizationFactor,
         averageRating: userWeights.userRating * normalizationFactor,
         pendingRequest: 0.10,
         schedulingPreference: 0.20
       };
+    };
 
-      let courseOverlapScore = 0;
-      let proficiencyBalanceScore = 0;
-      let averageRatingScore = 0;
-      let pendingRequestScore = hasPendingRequest ? 1 : 0;
-      let schedulingPreferenceScore = 0;
-
+    const calculateCourseOverlapScore = (currentUser, potentialMatch) => {
       const currentUserCourseIds = new Set(currentUser.userCourses.map(uc => uc.courseId));
       const potentialMatchCourseIds = new Set(potentialMatch.userCourses.map(uc => uc.courseId));
 
       const sharedCourses = [...currentUserCourseIds].filter(id => potentialMatchCourseIds.has(id));
       const totalUniqueCourses = new Set([...currentUserCourseIds, ...potentialMatchCourseIds]).size;
 
-      if (totalUniqueCourses > 0) {
-        courseOverlapScore = sharedCourses.length / totalUniqueCourses;
-      }
+      return totalUniqueCourses > 0 ? sharedCourses.length / totalUniqueCourses : 0;
+    };
+
+    const calculateProficiencyBalanceScore = (currentUser, potentialMatch) => {
+      const currentUserCourseIds = new Set(currentUser.userCourses.map(uc => uc.courseId));
+      const potentialMatchCourseIds = new Set(potentialMatch.userCourses.map(uc => uc.courseId));
+      const sharedCourses = [...currentUserCourseIds].filter(id => potentialMatchCourseIds.has(id));
+
+      if (sharedCourses.length === 0) return 0;
 
       let proficiencyDifferenceSum = 0;
-      let sharedCoursesCount = 0;
 
       sharedCourses.forEach(courseId => {
         const currentUserProficiency = currentUser.userCourses.find(uc => uc.courseId === courseId)?.proficiency || 1;
         const potentialMatchProficiency = potentialMatch.userCourses.find(uc => uc.courseId === courseId)?.proficiency || 1;
-
         proficiencyDifferenceSum += Math.abs(currentUserProficiency - potentialMatchProficiency);
-        sharedCoursesCount++;
       });
 
-      if (sharedCoursesCount > 0) {
-        const averageProficiencyDifference = proficiencyDifferenceSum / sharedCoursesCount;
-        const maxProficiencyDifference = 4;
-        proficiencyBalanceScore = 1 - (averageProficiencyDifference / maxProficiencyDifference);
-      }
+      const averageProficiencyDifference = proficiencyDifferenceSum / sharedCourses.length;
+      const maxProficiencyDifference = 4;
+      return 1 - (averageProficiencyDifference / maxProficiencyDifference);
+    };
 
+    const calculateAverageRatingScore = (potentialMatch) => {
       if (potentialMatch.ratings && potentialMatch.ratings.length > 0) {
         const avgRating = potentialMatch.ratings.reduce((sum, rating) => sum + rating.score, 0) / potentialMatch.ratings.length;
-        averageRatingScore = avgRating / 5;
-      } else {
-        averageRatingScore = 0.4;
+        return avgRating / 5;
       }
+      return 0.4;
+    };
 
-      if (currentUserPreferences && potentialMatch.studyPreferences) {
-        try {
-          const currentUserDays = JSON.parse(currentUserPreferences.preferredDays || '[]');
-          const potentialMatchDays = JSON.parse(potentialMatch.studyPreferences.preferredDays || '[]');
-          const currentUserTimeRanges = JSON.parse(currentUserPreferences.preferredTimeRanges || '[]');
-          const potentialMatchTimeRanges = JSON.parse(potentialMatch.studyPreferences.preferredTimeRanges || '[]');
-          const commonDays = currentUserDays.filter(day => potentialMatchDays.includes(day));
+    const calculateSchedulingPreferenceScore = (currentUserPreferences, potentialMatchPreferences) => {
+      if (!currentUserPreferences || !potentialMatchPreferences) return 0;
 
-          let dayOverlapScore = 0;
-          if (currentUserDays.length > 0) {
-            dayOverlapScore = commonDays.length / currentUserDays.length;
-          }
+      try {
+        const currentUserDays = JSON.parse(currentUserPreferences.preferredDays || '[]');
+        const potentialMatchDays = JSON.parse(potentialMatchPreferences.preferredDays || '[]');
+        const currentUserTimeRanges = JSON.parse(currentUserPreferences.preferredTimeRanges || '[]');
+        const potentialMatchTimeRanges = JSON.parse(potentialMatchPreferences.preferredTimeRanges || '[]');
+        const commonDays = currentUserDays.filter(day => potentialMatchDays.includes(day));
 
-          let timeOverlapScore = 0;
-          if (commonDays.length > 0 && currentUserTimeRanges.length > 0 && potentialMatchTimeRanges.length > 0) {
-            let totalOverlapMinutes = 0;
-            let totalUserMinutes = 0;
+        let dayOverlapScore = 0;
+        if (currentUserDays.length > 0) {
+          dayOverlapScore = commonDays.length / currentUserDays.length;
+        }
 
-            for (const range of currentUserTimeRanges) {
-              const startMinutes = convertTimeToMinutes(range.start);
-              const endMinutes = convertTimeToMinutes(range.end);
-              if (endMinutes > startMinutes) {
-                totalUserMinutes += (endMinutes - startMinutes) * commonDays.length;
-              }
-            }
+        let timeOverlapScore = 0;
+        if (commonDays.length > 0 && currentUserTimeRanges.length > 0 && potentialMatchTimeRanges.length > 0) {
+          timeOverlapScore = calculateTimeOverlapScore(currentUserTimeRanges, potentialMatchTimeRanges, commonDays);
+        }
 
-            for (const userRange of currentUserTimeRanges) {
-              const userStart = convertTimeToMinutes(userRange.start);
-              const userEnd = convertTimeToMinutes(userRange.end);
+        let schedulingScore = (dayOverlapScore * 0.7) + (timeOverlapScore * 0.3);
 
-              for (const matchRange of potentialMatchTimeRanges) {
-                const matchStart = convertTimeToMinutes(matchRange.start);
-                const matchEnd = convertTimeToMinutes(matchRange.end);
+        if (currentUserPreferences.sessionDuration === potentialMatchPreferences.sessionDuration) {
+          schedulingScore += 0.1;
+        }
 
-                if (userStart < matchEnd && matchStart < userEnd) {
-                  const overlapStart = Math.max(userStart, matchStart);
-                  const overlapEnd = Math.min(userEnd, matchEnd);
-                  const overlapMinutes = overlapEnd - overlapStart;
+        return Math.min(schedulingScore, 1.0);
+      } catch (error) {
+        return 0;
+      }
+    };
 
-                  if (overlapMinutes > 0) {
-                    totalOverlapMinutes += overlapMinutes * commonDays.length;
-                  }
-                }
-              }
-            }
+    const calculateTimeOverlapScore = (userTimeRanges, matchTimeRanges, commonDays) => {
+      let totalOverlapMinutes = 0;
+      let totalUserMinutes = 0;
 
-            if (totalUserMinutes > 0) {
-              timeOverlapScore = totalOverlapMinutes / totalUserMinutes;
-            }
-          }
-          schedulingPreferenceScore = (dayOverlapScore * 0.7) + (timeOverlapScore * 0.3);
-
-          if (currentUserPreferences.sessionDuration === potentialMatch.studyPreferences.sessionDuration) {
-            schedulingPreferenceScore += 0.1;
-          }
-
-          schedulingPreferenceScore = Math.min(schedulingPreferenceScore, 1.0);
-        } catch (error) {
-          schedulingPreferenceScore = 0;
+      for (const range of userTimeRanges) {
+        const startMinutes = convertTimeToMinutes(range.start);
+        const endMinutes = convertTimeToMinutes(range.end);
+        if (endMinutes > startMinutes) {
+          totalUserMinutes += (endMinutes - startMinutes) * commonDays.length;
         }
       }
+
+      if (totalUserMinutes === 0) return 0;
+
+      for (const userRange of userTimeRanges) {
+        const userStart = convertTimeToMinutes(userRange.start);
+        const userEnd = convertTimeToMinutes(userRange.end);
+
+        for (const matchRange of matchTimeRanges) {
+          const matchStart = convertTimeToMinutes(matchRange.start);
+          const matchEnd = convertTimeToMinutes(matchRange.end);
+
+          if (userStart < matchEnd && matchStart < userEnd) {
+            const overlapStart = Math.max(userStart, matchStart);
+            const overlapEnd = Math.min(userEnd, matchEnd);
+            const overlapMinutes = overlapEnd - overlapStart;
+
+            if (overlapMinutes > 0) {
+              totalOverlapMinutes += overlapMinutes * commonDays.length;
+            }
+          }
+        }
+      }
+
+      return totalOverlapMinutes / totalUserMinutes;
+    };
+
+    const calculateMatchingScore = (currentUser, potentialMatch, hasPendingRequest = false) => {
+      const weights = getNormalizedWeights(currentUserPreferences);
+
+      const courseOverlapScore = calculateCourseOverlapScore(currentUser, potentialMatch);
+      const proficiencyBalanceScore = calculateProficiencyBalanceScore(currentUser, potentialMatch);
+      const averageRatingScore = calculateAverageRatingScore(potentialMatch);
+      const pendingRequestScore = hasPendingRequest ? 1 : 0;
+      const schedulingPreferenceScore = calculateSchedulingPreferenceScore(
+        currentUserPreferences,
+        potentialMatch.studyPreferences
+      );
 
       const totalScore =
         (courseOverlapScore * weights.courseOverlap) +
