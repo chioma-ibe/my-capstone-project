@@ -8,6 +8,7 @@ import { motion, useAnimation } from 'framer-motion';
 function Home() {
   const { dbUser } = useAuth();
   const [potentialMatches, setPotentialMatches] = useState([]);
+  const [matchRequests, setMatchRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [currentUserIndex, setCurrentUserIndex] = useState(0);
@@ -15,24 +16,29 @@ function Home() {
   const controls = useAnimation();
 
   useEffect(() => {
-    const fetchPotentialMatches = async () => {
+    const fetchData = async () => {
       if (!dbUser?.id) return;
 
       try {
         setLoading(true);
         setError('');
-        const matches = await apiService.getPotentialMatches(dbUser.id);
+
+        const [matches, requests] = await Promise.all([
+          apiService.getPotentialMatches(dbUser.id),
+          apiService.getMatchRequests(dbUser.id)
+        ]);
+
         setPotentialMatches(matches);
+        setMatchRequests(requests);
         setCurrentUserIndex(0);
       } catch (err) {
-        console.error('Error fetching potential matches:', err);
-        setError('Failed to load potential matches');
+        setError('Failed to load data');
       } finally {
         setLoading(false);
       }
     };
 
-    fetchPotentialMatches();
+    fetchData();
   }, [dbUser]);
 
   if (loading) {
@@ -87,7 +93,23 @@ function Home() {
         transition: { duration: 0.3 }
       });
 
-      await apiService.createMatch(dbUser.id, currentPotentialMatch.id);
+      if (currentPotentialMatch.hasPendingRequest) {
+        if (matchRequests && matchRequests.length > 0) {
+          const matchRequest = matchRequests.find(
+            request => request.sender.id === currentPotentialMatch.id
+          );
+
+          if (matchRequest) {
+            await apiService.respondToMatchRequest(matchRequest.id, 'ACCEPTED');
+          } else {
+            throw new Error('Match request not found');
+          }
+        } else {
+          throw new Error('Match requests data missing');
+        }
+      } else {
+        await apiService.createMatchRequest(dbUser.id, currentPotentialMatch.id);
+      }
 
       setPotentialMatches(prevMatches => {
         const newMatches = prevMatches.filter(user => user.id !== currentPotentialMatch.id);
@@ -103,8 +125,7 @@ function Home() {
 
       controls.set({ x: 0, rotate: 0, opacity: 1 });
     } catch (err) {
-      console.error('Error creating match:', err);
-      setError('Failed to create match');
+      setError('Failed to process match');
       controls.set({ x: 0, rotate: 0, opacity: 1 });
     } finally {
       setActionLoading(false);
@@ -210,11 +231,15 @@ function Home() {
               {actionLoading ? 'Skipping...' : 'Skip'}
             </button>
             <button
-              className="match-button"
+              className={`match-button ${currentPotentialMatch.hasPendingRequest ? 'accept-button' : ''}`}
               onClick={handleMatch}
               disabled={actionLoading}
             >
-              {actionLoading ? 'Matching...' : 'Match'}
+              {actionLoading
+                ? 'Processing...'
+                : currentPotentialMatch.hasPendingRequest
+                  ? 'Accept Match'
+                  : 'Match'}
             </button>
           </div>
         </motion.div>

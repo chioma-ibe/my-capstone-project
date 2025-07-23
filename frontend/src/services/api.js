@@ -17,6 +17,9 @@ class ApiService {
 
     try {
       const response = await fetch(url, config);
+      if (response.status === 204) {
+        return null;
+      }
       const data = await response.json();
 
       if (!response.ok) {
@@ -25,7 +28,6 @@ class ApiService {
 
       return data;
     } catch (error) {
-      console.error('API request error:', error);
       throw error;
     }
   }

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import UserCourses from '../components/UserCourses';
 import CourseSelector from '../components/CourseSelector';
+import StudyPreferences from '../components/StudyPreferences';
 import Spinner from '../components/spinner/Spinner';
 import '../styles/pages/Profile.css';
 
@@ -63,6 +64,10 @@ function Profile() {
               onCourseAdded={handleCourseAdded}
             />
           </div>
+        </div>
+
+        <div className="study-preferences-section">
+          <StudyPreferences userId={dbUser.id} />
         </div>
       </div>
     </div>

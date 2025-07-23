@@ -4,6 +4,11 @@ const { PrismaClient } = require('../generated/prisma');
 const router = express.Router();
 const prisma = new PrismaClient();
 
+function convertTimeToMinutes(timeString) {
+  const [hours, minutes] = timeString.split(':').map(Number);
+  return (hours * 60) + minutes;
+}
+
 router.post('/firebase-auth', async (req, res) => {
   try {
     const { firebaseId, email, name } = req.body;
@@ -49,7 +54,6 @@ router.post('/firebase-auth', async (req, res) => {
 
     res.json({ user });
   } catch (error) {
-    console.error('Firebase auth error:', error);
     res.status(500).json({ error: 'Failed to authenticate user' });
   }
 });
@@ -97,6 +101,13 @@ router.get('/potential-matches/:userId', async (req, res) => {
     );
 
     const excludedUserIds = [...matchedUserIds, userId];
+    const pendingRequests = await prisma.matchRequest.findMany({
+      where: {
+        receiverId: userId,
+        status: 'PENDING'
+      }
+    });
+    const pendingRequestSenderIds = pendingRequests.map(req => req.senderId);
 
     const potentialMatches = await prisma.user.findMany({
       where: {
@@ -116,20 +127,28 @@ router.get('/potential-matches/:userId', async (req, res) => {
             courseId: { in: currentUserCourseIds }
           }
         },
-        ratings: true
+        ratings: true,
+        studyPreferences: true
       }
     });
+    const currentUserPreferences = await prisma.studyPreferences.findUnique({
+      where: { userId: userId }
+    });
 
-    const calculateMatchingScore = (currentUser, potentialMatch) => {
+    const calculateMatchingScore = (currentUser, potentialMatch, hasPendingRequest = false) => {
       const weights = {
-        courseOverlap: 0.4,
-        proficiencyBalance: 0.3,
-        averageRating: 0.3
+        courseOverlap: 0.30,
+        proficiencyBalance: 0.20,
+        averageRating: 0.20,
+        pendingRequest: 0.10,
+        schedulingPreference: 0.20
       };
 
       let courseOverlapScore = 0;
       let proficiencyBalanceScore = 0;
       let averageRatingScore = 0;
+      let pendingRequestScore = hasPendingRequest ? 1 : 0;
+      let schedulingPreferenceScore = 0;
 
       const currentUserCourseIds = new Set(currentUser.userCourses.map(uc => uc.courseId));
       const potentialMatchCourseIds = new Set(potentialMatch.userCourses.map(uc => uc.courseId));
@@ -165,10 +184,74 @@ router.get('/potential-matches/:userId', async (req, res) => {
         averageRatingScore = 0.4;
       }
 
+      if (currentUserPreferences && potentialMatch.studyPreferences) {
+        try {
+          const currentUserDays = JSON.parse(currentUserPreferences.preferredDays || '[]');
+          const potentialMatchDays = JSON.parse(potentialMatch.studyPreferences.preferredDays || '[]');
+          const currentUserTimeRanges = JSON.parse(currentUserPreferences.preferredTimeRanges || '[]');
+          const potentialMatchTimeRanges = JSON.parse(potentialMatch.studyPreferences.preferredTimeRanges || '[]');
+          const commonDays = currentUserDays.filter(day => potentialMatchDays.includes(day));
+
+          let dayOverlapScore = 0;
+          if (currentUserDays.length > 0) {
+            dayOverlapScore = commonDays.length / currentUserDays.length;
+          }
+
+          let timeOverlapScore = 0;
+          if (commonDays.length > 0 && currentUserTimeRanges.length > 0 && potentialMatchTimeRanges.length > 0) {
+            let totalOverlapMinutes = 0;
+            let totalUserMinutes = 0;
+
+            for (const range of currentUserTimeRanges) {
+              const startMinutes = convertTimeToMinutes(range.start);
+              const endMinutes = convertTimeToMinutes(range.end);
+              if (endMinutes > startMinutes) {
+                totalUserMinutes += (endMinutes - startMinutes) * commonDays.length;
+              }
+            }
+
+            for (const userRange of currentUserTimeRanges) {
+              const userStart = convertTimeToMinutes(userRange.start);
+              const userEnd = convertTimeToMinutes(userRange.end);
+
+              for (const matchRange of potentialMatchTimeRanges) {
+                const matchStart = convertTimeToMinutes(matchRange.start);
+                const matchEnd = convertTimeToMinutes(matchRange.end);
+
+                if (userStart < matchEnd && matchStart < userEnd) {
+                  const overlapStart = Math.max(userStart, matchStart);
+                  const overlapEnd = Math.min(userEnd, matchEnd);
+                  const overlapMinutes = overlapEnd - overlapStart;
+
+                  if (overlapMinutes > 0) {
+                    totalOverlapMinutes += overlapMinutes * commonDays.length;
+                  }
+                }
+              }
+            }
+
+            if (totalUserMinutes > 0) {
+              timeOverlapScore = totalOverlapMinutes / totalUserMinutes;
+            }
+          }
+          schedulingPreferenceScore = (dayOverlapScore * 0.7) + (timeOverlapScore * 0.3);
+
+          if (currentUserPreferences.sessionDuration === potentialMatch.studyPreferences.sessionDuration) {
+            schedulingPreferenceScore += 0.1;
+          }
+
+          schedulingPreferenceScore = Math.min(schedulingPreferenceScore, 1.0);
+        } catch (error) {
+          schedulingPreferenceScore = 0;
+        }
+      }
+
       const totalScore =
         (courseOverlapScore * weights.courseOverlap) +
         (proficiencyBalanceScore * weights.proficiencyBalance) +
-        (averageRatingScore * weights.averageRating);
+        (averageRatingScore * weights.averageRating) +
+        (pendingRequestScore * weights.pendingRequest) +
+        (schedulingPreferenceScore * weights.schedulingPreference);
 
       return Math.round(totalScore * 100) / 100;
     };
@@ -179,6 +262,8 @@ router.get('/potential-matches/:userId', async (req, res) => {
           ? user.ratings.reduce((sum, rating) => sum + rating.score, 0) / user.ratings.length
           : 0;
 
+        const hasPendingRequest = pendingRequestSenderIds.includes(user.id);
+
         return {
           id: user.id,
           name: user.name,
@@ -186,9 +271,10 @@ router.get('/potential-matches/:userId', async (req, res) => {
           bio: user.bio,
           profilePhoto: user.profilePhoto,
           matchedAt: new Date().toISOString().split('T')[0],
-          matchingScore: calculateMatchingScore(currentUser, user),
+          matchingScore: calculateMatchingScore(currentUser, user, hasPendingRequest),
           averageRating: Math.round(averageRating * 10) / 10,
           totalRatings: user.ratings.length,
+          hasPendingRequest: hasPendingRequest,
           sharedCourses: user.userCourses.map(uc => ({
             id: uc.course.id,
             name: uc.course.name,
@@ -201,7 +287,6 @@ router.get('/potential-matches/:userId', async (req, res) => {
 
     res.json(matchesWithSharedCourses);
   } catch (error) {
-    console.error('Error fetching potential matches:', error);
     res.status(500).json({ error: 'Failed to fetch potential matches' });
   }
 });
@@ -244,7 +329,6 @@ router.post('/matches', async (req, res) => {
 
     res.status(201).json(match);
   } catch (error) {
-    console.error('Error creating match:', error);
     res.status(500).json({ error: 'Failed to create match' });
   }
 });
@@ -326,7 +410,6 @@ router.get('/confirmed-matches/:userId', async (req, res) => {
 
     res.json(confirmedMatches);
   } catch (error) {
-    console.error('Error fetching confirmed matches:', error);
     res.status(500).json({ error: 'Failed to fetch confirmed matches' });
   }
 });
@@ -354,7 +437,6 @@ router.post('/ratings', async (req, res) => {
 
     res.json(rating);
   } catch (error) {
-    console.error('Error creating rating:', error);
     res.status(500).json({ error: 'Failed to create rating' });
   }
 });
@@ -427,12 +509,18 @@ router.post('/match-requests', async (req, res) => {
       return res.status(409).json({ error: 'Match already exists' });
     }
 
+    await prisma.matchRequest.findFirst({
+      where: {
+        senderId: parseInt(receiverId),
+        receiverId: parseInt(senderId),
+        status: 'PENDING'
+      }
+    });
+
     const existingRequest = await prisma.matchRequest.findFirst({
       where: {
-        OR: [
-          { senderId: parseInt(senderId), receiverId: parseInt(receiverId) },
-          { senderId: parseInt(receiverId), receiverId: parseInt(senderId) }
-        ]
+        senderId: parseInt(senderId),
+        receiverId: parseInt(receiverId)
       }
     });
 
@@ -454,7 +542,6 @@ router.post('/match-requests', async (req, res) => {
 
     res.status(201).json(matchRequest);
   } catch (error) {
-    console.error('Error creating match request:', error);
     res.status(500).json({ error: 'Failed to create match request' });
   }
 });
@@ -483,7 +570,6 @@ router.get('/match-requests/:userId', async (req, res) => {
 
     res.json(receivedRequests);
   } catch (error) {
-    console.error('Error fetching match requests:', error);
     res.status(500).json({ error: 'Failed to fetch match requests' });
   }
 });
@@ -517,7 +603,6 @@ router.put('/match-requests/:requestId', async (req, res) => {
 
     res.json(matchRequest);
   } catch (error) {
-    console.error('Error updating match request:', error);
     res.status(500).json({ error: 'Failed to update match request' });
   }
 });
