@@ -8,7 +8,16 @@ async function getStudyPreferences(userId) {
 }
 
 async function createOrUpdateStudyPreferences(userId, preferencesData) {
-  const { preferredDays, preferredTimeRanges, preferBackToBack, maxSessionsPerWeek, sessionDuration } = preferencesData;
+  const {
+    preferredDays,
+    preferredTimeRanges,
+    preferBackToBack,
+    maxSessionsPerWeek,
+    sessionDuration,
+    weightCourseOverlap,
+    weightProficiencyBalance,
+    weightUserRating
+  } = preferencesData;
 
   return prisma.studyPreferences.upsert({
     where: { userId: parseInt(userId) },
@@ -17,7 +26,10 @@ async function createOrUpdateStudyPreferences(userId, preferencesData) {
       preferredTimeRanges: JSON.stringify(preferredTimeRanges),
       preferBackToBack,
       maxSessionsPerWeek,
-      sessionDuration
+      sessionDuration,
+      weightCourseOverlap: weightCourseOverlap !== undefined ? weightCourseOverlap : 0.50,
+      weightProficiencyBalance: weightProficiencyBalance !== undefined ? weightProficiencyBalance : 0.30,
+      weightUserRating: weightUserRating !== undefined ? weightUserRating : 0.20
     },
     create: {
       userId: parseInt(userId),
@@ -25,7 +37,10 @@ async function createOrUpdateStudyPreferences(userId, preferencesData) {
       preferredTimeRanges: JSON.stringify(preferredTimeRanges),
       preferBackToBack,
       maxSessionsPerWeek,
-      sessionDuration
+      sessionDuration,
+      weightCourseOverlap: weightCourseOverlap !== undefined ? weightCourseOverlap : 0.50,
+      weightProficiencyBalance: weightProficiencyBalance !== undefined ? weightProficiencyBalance : 0.30,
+      weightUserRating: weightUserRating !== undefined ? weightUserRating : 0.20
     }
   });
 }
@@ -62,23 +77,50 @@ async function getCompatibleStudyTimes(userId1, userId2) {
   const commonDays = user1Days.filter(day => user2Days.includes(day));
 
   const overlappingRanges = [];
-  for (const range1 of user1TimeRanges) {
-    for (const range2 of user2TimeRanges) {
-      const start1 = range1.start;
-      const end1 = range1.end;
-      const start2 = range2.start;
-      const end2 = range2.end;
 
-      if (start1 <= end2 && start2 <= end1) {
-        const overlapStart = start1 > start2 ? start1 : start2;
-        const overlapEnd = end1 < end2 ? end1 : end2;
+  const convertToMinutes = (timeStr) => {
+    const [hours, minutes] = timeStr.split(':').map(Number);
+    return hours * 60 + minutes;
+  };
 
-        overlappingRanges.push({
-          start: overlapStart,
-          end: overlapEnd,
-          perfectMatch: true
-        });
-      }
+  const formatTime = (minutes) => {
+    const hours = Math.floor(minutes / 60);
+    const mins = minutes % 60;
+    return `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`;
+  };
+
+  const ranges1 = user1TimeRanges.map(range => ({
+    start: convertToMinutes(range.start),
+    end: convertToMinutes(range.end)
+  })).sort((a, b) => a.start - b.start);
+
+  const ranges2 = user2TimeRanges.map(range => ({
+    start: convertToMinutes(range.start),
+    end: convertToMinutes(range.end)
+  })).sort((a, b) => a.start - b.start);
+
+  let i = 0;
+  let j = 0;
+
+  while (i < ranges1.length && j < ranges2.length) {
+    const r1 = ranges1[i];
+    const r2 = ranges2[j];
+
+    const startOverlap = Math.max(r1.start, r2.start);
+    const endOverlap = Math.min(r1.end, r2.end);
+
+    if (startOverlap < endOverlap) {
+      overlappingRanges.push({
+        start: formatTime(startOverlap),
+        end: formatTime(endOverlap),
+        perfectMatch: true
+      });
+    }
+
+    if (r1.end < r2.end) {
+      i++;
+    } else {
+      j++;
     }
   }
 
