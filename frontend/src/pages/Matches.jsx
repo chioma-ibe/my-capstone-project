@@ -4,6 +4,7 @@ import apiService from '../services/api';
 import calendarClient from '../services/calendarClient';
 import RatingModal from '../components/RatingModal';
 import CreateSessionModal from '../components/calendar/CreateSessionModal';
+import StudyTimeBooking from '../components/StudyTimeBooking';
 import Spinner from '../components/spinner/Spinner';
 import '../styles/pages/Matches.css';
 
@@ -16,6 +17,7 @@ function Matches() {
   const [error, setError] = useState(null);
   const [ratingModalOpen, setRatingModalOpen] = useState(false);
   const [sessionModalOpen, setSessionModalOpen] = useState(false);
+  const [bookingModalOpen, setBookingModalOpen] = useState(false);
   const [selectedPartner, setSelectedPartner] = useState(null);
 
   useEffect(() => {
@@ -69,6 +71,11 @@ function Matches() {
     setSessionModalOpen(true);
   };
 
+  const handleBookBestTimes = (partner) => {
+    setSelectedPartner(partner);
+    setBookingModalOpen(true);
+  };
+
 
   const handleCloseRatingModal = () => {
     setRatingModalOpen(false);
@@ -77,6 +84,11 @@ function Matches() {
 
   const handleCloseSessionModal = () => {
     setSessionModalOpen(false);
+    setSelectedPartner(null);
+  };
+
+  const handleCloseBookingModal = () => {
+    setBookingModalOpen(false);
     setSelectedPartner(null);
   };
 
@@ -178,6 +190,12 @@ function Matches() {
               </div>
               <div className="match-actions">
                 <button
+                  className="book-best-times-btn"
+                  onClick={() => handleBookBestTimes(match)}
+                >
+                  Book Best Times
+                </button>
+                <button
                   className="schedule-btn"
                   onClick={() => handleScheduleSession(match)}
                 >
@@ -207,6 +225,17 @@ function Matches() {
           onSessionCreated={handleSessionCreated}
           preselectedAttendee={selectedPartner.email}
           sharedCourses={selectedPartner.sharedCourses}
+        />
+      )}
+
+      {bookingModalOpen && selectedPartner && (
+        <StudyTimeBooking
+          partnerId={selectedPartner.id}
+          partnerName={selectedPartner.name}
+          partnerEmail={selectedPartner.email}
+          sharedCourses={selectedPartner.sharedCourses}
+          onClose={handleCloseBookingModal}
+          onSessionCreated={handleSessionCreated}
         />
       )}
 

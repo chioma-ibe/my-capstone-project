@@ -1,14 +1,14 @@
 .user-courses {
-  background-color: white;
+  background-color: var(--bg-tertiary);
   border-radius: 8px;
   padding: 1rem;
 }
 
 .user-courses h2 {
   margin-bottom: 1.5rem;
-  color: #2c3e50;
-  border-bottom: 2px solid #f1f1f1;
+  color: var(--text-primary);
   padding-bottom: 0.5rem;
+  text-align: center;
 }
 
 .courses-list {
@@ -22,9 +22,9 @@
   justify-content: space-between;
   align-items: flex-start;
   padding: 1rem;
-  background-color: #f8f9fa;
+  background-color: var(--bg-secondary);
   border-radius: 6px;
-  border-left: 4px solid #3498db;
+  margin-bottom: 0.75rem;
 }
 
 .course-info {
@@ -34,50 +34,85 @@
 .course-info h3 {
   font-size: 1.1rem;
   margin-bottom: 0.3rem;
-  color: #2c3e50;
+  color: var(--text-primary);
+}
+
+.course-info p {
+  color: var(--text-secondary);
 }
 
 
 .edit-proficiency-btn {
-  background-color: rgba(52, 152, 219, 0.8);
-  color: white;
-  border: none;
-  padding: 4px 8px;
-  border-radius: 4px;
+  padding: 4px 10px;
   font-size: 0.8rem;
   margin-bottom: 5px;
-  cursor: pointer;
+  background-color: #3498db;
 }
 
 .edit-proficiency-btn:hover {
-  background-color: rgba(52, 152, 219, 1);
+  background-color: #2980b9;
 }
 
-
-
 .proficiency-editor {
-  margin-top: 5px;
-  margin-bottom: 10px;
+  margin-top: 8px;
+  margin-bottom: 12px;
+  background-color: var(--bg-tertiary);
+  padding: 12px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .proficiency-editor select {
-  margin-right: 5px;
+  background-color: var(--bg-secondary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  padding: 6px 10px;
+  border-radius: 4px;
+  flex: 1;
 }
 
-.proficiency-editor button {
-  margin-right: 5px;
+.proficiency-editor button:first-of-type {
+  background-color: #2ecc71;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.proficiency-editor button:first-of-type:hover {
+  background-color: #27ae60;
+}
+
+.proficiency-editor button:last-child {
+  background-color: #7f8c8d;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.proficiency-editor button:last-child:hover {
+  background-color: #6c7a89;
 }
 
 .course-description {
   font-size: 0.9rem;
-  color: #6c757d;
+  color: var(--text-secondary);
+  margin-top: 0.5rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--border-color);
 }
 
 .remove-course-btn {
-  background-color: #e74c3c;
-  color: white;
   padding: 0.4rem 0.8rem;
   font-size: 0.9rem;
+  background-color: #e74c3c;
 }
 
 .remove-course-btn:hover {

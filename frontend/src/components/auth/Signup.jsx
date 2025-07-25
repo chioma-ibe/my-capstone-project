@@ -9,7 +9,6 @@ function Signup() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
   const { signup } = useAuth();
   const navigate = useNavigate();
 
@@ -22,15 +21,12 @@ function Signup() {
 
     try {
       setError('');
-      setLoading(true);
       await signup(email, password);
       navigate('/');
     } catch (error) {
       console.error('Signup error:', error);
       setError(error.message || 'Failed to create an account');
     }
-
-    setLoading(false);
   }
 
   return (
@@ -83,11 +79,11 @@ function Signup() {
               required
             />
           </div>
-          <button type="submit" className="btn btn-primary" disabled={loading}>
-            {loading ? 'Creating Account...' : 'Sign Up'}
+          <button type="submit" className="btn btn-primary">
+            Sign Up
           </button>
         </form>
-        <span> OR </span>
+        <span class = "divider"> OR </span>
         <GoogleSignInButton />
         <div className="auth-links">
           <div>

@@ -1,0 +1,128 @@
+.session-details-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.session-details-modal-content {
+  background-color: var(--bg-tertiary);
+  width: 90%;
+  max-width: 600px;
+  max-height: 90vh;
+  overflow-y: auto;
+  border-radius: 8px;
+  color: var(--text-primary);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+}
+
+.session-details-modal-header {
+  display: flex;
+  justify-content: space-between;
+  padding: 1rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.session-details-modal-header h2 {
+  margin: 0;
+  color: var(--text-primary);
+}
+
+.session-details-modal-close-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-secondary);
+  font-size: 1.5rem;
+}
+
+.session-details-modal-close-btn:hover {
+  color: var(--text-primary);
+}
+
+.session-details-modal-body {
+  padding: 1rem;
+}
+
+.session-details-item {
+  margin-bottom: 1rem;
+  padding: 0.5rem;
+  background-color: var(--bg-secondary);
+  border-radius: 6px;
+}
+
+.session-details-label {
+  font-weight: bold;
+  color: var(--text-secondary);
+  display: block;
+  margin-bottom: 0.25rem;
+}
+
+.session-details-value {
+  color: var(--text-primary);
+}
+
+.session-details-meet-link {
+  color: var(--btn-primary);
+  text-decoration: none;
+}
+
+.session-details-meet-link:hover {
+  text-decoration: underline;
+}
+
+.session-details-attendees {
+  list-style: none;
+  padding: 0;
+}
+
+.session-details-footer {
+  display: flex;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 1rem;
+  border-top: 1px solid var(--border-color);
+}
+
+.session-details-btn {
+  padding: 0.5rem 1rem;
+  border: none;
+  cursor: pointer;
+  border-radius: 4px;
+  flex: 1;
+  max-width: 120px;
+  text-align: center;
+}
+
+.session-details-close-btn {
+  background-color: #7f8c8d;
+  color: white;
+}
+
+.session-details-close-btn:hover {
+  background-color: #6c7a89;
+}
+
+.session-details-edit-btn {
+  background-color: #2ecc71;
+  color: white;
+}
+
+.session-details-edit-btn:hover {
+  background-color: #27ae60;
+}
+
+.session-details-delete-btn {
+  background-color: #e74c3c;
+  color: white;
+}
+
+.session-details-delete-btn:hover {
+  background-color: #c0392b;
+}

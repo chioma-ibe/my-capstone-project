@@ -56,7 +56,7 @@ function Login() {
             Login
           </button>
         </form>
-        <span>OR</span>
+        <span class = "divider">OR</span>
         <GoogleSignInButton />
         <div className="auth-links">
           <div>
