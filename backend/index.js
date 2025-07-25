@@ -6,6 +6,8 @@ const userRoutes = require('./routes/users');
 const courseRoutes = require('./routes/courses');
 const userCourseRoutes = require('./routes/userCourses');
 const calendarRoutes = require('./routes/calendar');
+const studyPreferencesRoutes = require('./routes/studyPreferences');
+const userCache = require('./services/userCache');
 
 const PORT = 3000;
 
@@ -22,6 +24,7 @@ app.use('/api/users', userRoutes);
 app.use('/api/courses', courseRoutes);
 app.use('/api/user-courses', userCourseRoutes);
 app.use('/api/calendar', calendarRoutes);
+app.use('/api/study-preferences', studyPreferencesRoutes);
 
 app.use((err, _req, res, _next) => {
   res.status(500).json({ message: 'Something went wrong!', error: err.message });
