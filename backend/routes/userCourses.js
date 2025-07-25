@@ -1,5 +1,6 @@
 const express = require('express');
 const { PrismaClient } = require('../generated/prisma');
+const userCache = require('../services/userCache');
 
 const router = express.Router();
 const prisma = new PrismaClient();
@@ -10,6 +11,11 @@ router.get('/:userId', async (req, res) => {
 
     if (isNaN(userId)) {
       return res.status(400).json({ error: 'Invalid user ID' });
+    }
+
+    const cachedUserCourses = userCache.getUserCourses(userId);
+    if (cachedUserCourses) {
+      return res.json(cachedUserCourses);
     }
 
     const userCourses = await prisma.userCourse.findMany({
@@ -23,6 +29,8 @@ router.get('/:userId', async (req, res) => {
         }
       }
     });
+
+    userCache.setUserCourses(userId, userCourses, 300);
 
     res.json(userCourses);
   } catch (error) {
@@ -65,6 +73,10 @@ router.post('/', async (req, res) => {
       }
     });
 
+    userCache.invalidateUserCourses(userId);
+
+    userCache.invalidatePotentialMatches(userId);
+
     res.status(201).json(userCourse);
   } catch (error) {
     console.error('Error adding user course:', error);
@@ -89,6 +101,10 @@ router.delete('/:userId/:courseId', async (req, res) => {
         }
       }
     });
+
+    userCache.invalidateUserCourses(userId);
+
+    userCache.invalidatePotentialMatches(userId);
 
     res.json({ message: 'Course removed successfully', deletedUserCourse });
   } catch (error) {
@@ -128,6 +144,10 @@ router.put('/:userId/:courseId', async (req, res) => {
         course: true
       }
     });
+
+    userCache.invalidateUserCourses(userId);
+
+    userCache.invalidatePotentialMatches(userId);
 
     res.json(updatedUserCourse);
   } catch (error) {

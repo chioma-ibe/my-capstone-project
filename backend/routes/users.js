@@ -1,5 +1,6 @@
 const express = require('express');
 const { PrismaClient } = require('../generated/prisma');
+const userCache = require('../services/userCache');
 
 const router = express.Router();
 const prisma = new PrismaClient();
@@ -64,6 +65,11 @@ router.get('/potential-matches/:userId', async (req, res) => {
 
     if (isNaN(userId)) {
       return res.status(400).json({ error: 'Invalid user ID' });
+    }
+
+    const cachedMatches = userCache.getPotentialMatches(userId);
+    if (cachedMatches) {
+      return res.json(cachedMatches);
     }
 
     const currentUser = await prisma.user.findUnique({
@@ -312,8 +318,11 @@ router.get('/potential-matches/:userId', async (req, res) => {
       .sort((a, b) => b.matchingScore - a.matchingScore)
       .slice(0, 10);
 
+    userCache.setPotentialMatches(userId, matchesWithSharedCourses, 300);
+
     res.json(matchesWithSharedCourses);
   } catch (error) {
+    console.error('Error fetching potential matches:', error);
     res.status(500).json({ error: 'Failed to fetch potential matches' });
   }
 });

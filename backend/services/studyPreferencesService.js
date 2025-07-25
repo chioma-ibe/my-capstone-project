@@ -88,7 +88,36 @@ async function getCompatibleStudyTimes(userId1, userId2) {
   if (suggestedTimes.length < 3) suggestedTimes.push(...buildSuggestedTimes(user1TimeRanges, user1UniqueDays, now, sessionDuration, daysMap, currentDay, 3 - suggestedTimes.length, 'User1 unique day'));
   if (suggestedTimes.length < 3) suggestedTimes.push(...buildSuggestedTimes(user1TimeRanges, user2UniqueDays, now, sessionDuration, daysMap, currentDay, 3 - suggestedTimes.length, 'User2 unique day'));
 
-  return suggestedTimes.slice(0, 3);
+  const scoredSuggestions = suggestedTimes
+    .map(slot => ({
+      ...slot,
+      score: scoreSuggestedSlot(slot, user1Prefs)
+    }))
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 3);
+
+  return scoredSuggestions;
+}
+
+function scoreSuggestedSlot(slot, userPrefs) {
+  let score = 0;
+  const start = new Date(slot.start);
+  const hour = start.getHours();
+  const now = new Date();
+
+  if (userPrefs.preferBackToBack) {
+    if (hour >= 9 && hour <= 12) score += 1;
+    else if (hour >= 13 && hour <= 17) score += 0.5;
+  }
+
+  const hoursFromNow = (start - now) / (1000 * 60 * 60);
+  if (hoursFromNow <= 24) score += 1;
+  else if (hoursFromNow <= 48) score += 0.5;
+
+  const day = start.getDay();
+  if (day === 0 || day === 6) score -= 0.5;
+
+  return score;
 }
 
 function findOverlappingTimeRanges(ranges1, ranges2) {

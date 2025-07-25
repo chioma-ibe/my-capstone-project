@@ -57,7 +57,7 @@ function App() {
           </main>
 
           <footer className="app-footer">
-            <p>Study Buddy "not finished yet: Coming soon" </p>
+            <p>Study Buddy Matcher </p>
           </footer>
         </div>
       </FirebaseAuthProvider>
