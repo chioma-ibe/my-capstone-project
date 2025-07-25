@@ -1,0 +1,56 @@
+:root {
+  --light-bg-primary: #f8f9fa;
+  --light-bg-secondary: #ffffff;
+  --light-bg-tertiary: #e9ecef;
+  --light-text-primary: #212529;
+  --light-text-secondary: #495057;
+  --light-border-color: #dee2e6;
+  --light-input-bg: #ffffff;
+  --light-card-bg: #ffffff;
+  --light-navbar-bg: #f8f9fa;
+  --light-footer-bg: #f8f9fa;
+  --light-nav-text: #333333;
+  --light-nav-text-hover: #0056b3;
+  --light-nav-text-active: #0056b3;
+
+  --btn-primary: #3498db;
+  --btn-primary-hover: #2980b9;
+  --btn-success: #2ecc71;
+  --btn-success-hover: #27ae60;
+  --btn-danger: #e74c3c;
+  --btn-danger-hover: #c0392b;
+  --btn-secondary: #7f8c8d;
+  --btn-secondary-hover: #6c7a89;
+}
+
+[data-theme="dark"] {
+  --bg-primary: #202124;
+  --bg-secondary: #2c2d30;
+  --bg-tertiary: #3a3b3f;
+  --text-primary: #ffffff;
+  --text-secondary: #cccccc;
+  --border-color: #4a4a4a;
+  --input-bg: #3a3b3f;
+  --card-bg: #3a3b3f;
+  --navbar-bg: #2c2d30;
+  --footer-bg: #232323;
+  --nav-text: #ffffff;
+  --nav-text-hover: #b0e0e6;
+  --nav-text-active: #3498db;
+}
+
+[data-theme="light"] {
+  --bg-primary: var(--light-bg-primary);
+  --bg-secondary: var(--light-bg-secondary);
+  --bg-tertiary: var(--light-bg-tertiary);
+  --text-primary: var(--light-text-primary);
+  --text-secondary: var(--light-text-secondary);
+  --border-color: var(--light-border-color);
+  --input-bg: var(--light-input-bg);
+  --card-bg: var(--light-card-bg);
+  --navbar-bg: var(--light-navbar-bg);
+  --footer-bg: var(--light-footer-bg);
+  --nav-text: var(--light-nav-text);
+  --nav-text-hover: var(--light-nav-text-hover);
+  --nav-text-active: var(--light-nav-text-active);
+}

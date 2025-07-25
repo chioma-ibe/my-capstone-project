@@ -12,10 +12,12 @@
 }
 
 .rating-modal {
-  background: white;
+  background: var(--bg-tertiary);
   padding: 20px;
   border-radius: 8px;
   min-width: 300px;
+  color: var(--text-primary);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
 }
 
 .rating-modal-header {
@@ -33,6 +35,11 @@
   border: none;
   font-size: 20px;
   cursor: pointer;
+  color: var(--text-secondary);
+}
+
+.close-button:hover {
+  color: var(--text-primary);
 }
 
 .rating-form {
@@ -41,21 +48,37 @@
   gap: 15px;
 }
 
-.rating-field select,
-.rating-modal-actions button {
+.rating-field select {
   padding: 8px;
-  border: 1px solid #ddd;
+  border: 1px solid var(--border-color);
   border-radius: 4px;
+  background-color: var(--bg-secondary);
+  color: var(--text-primary);
 }
 
 .rating-modal-actions button {
   padding: 8px 16px;
   cursor: pointer;
+  border: none;
+  border-radius: 4px;
 }
 
 .rating-modal-actions button[type="submit"] {
-  background: #007bff;
+  background: #2ecc71;
   color: white;
+}
+
+.rating-modal-actions button[type="submit"]:hover {
+  background: #27ae60;
+}
+
+.rating-modal-actions button[type="button"] {
+  background: #7f8c8d;
+  color: white;
+}
+
+.rating-modal-actions button[type="button"]:hover {
+  background: #6c7a89;
 }
 
 .rating-modal-actions button:disabled {
@@ -82,8 +105,7 @@
 }
 
 .existing-rating-notice {
-  background: #f8f9fa;
-  border: 1px solid #e9ecef;
+  background: var(--bg-secondary);
   border-radius: 4px;
   padding: 12px;
   margin-bottom: 15px;
@@ -92,15 +114,16 @@
 .existing-rating-notice p {
   margin: 0;
   font-size: 14px;
-  color: #495057;
+  color: var(--text-secondary);
 }
 
 .existing-rating-notice p:first-child {
   font-weight: 600;
-  color: #007bff;
+  color: var(--btn-primary);
 }
 
 .existing-rating-notice p:last-child {
   margin-top: 5px;
   font-style: italic;
+  color: var(--text-secondary);
 }
