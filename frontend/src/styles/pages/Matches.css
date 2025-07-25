@@ -177,8 +177,28 @@
   margin-bottom: 0.5rem;
 }
 
+.book-best-times-btn {
+  background-color: #2ecc71;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.book-best-times-btn:hover {
+  background-color: #27ae60;
+}
+
 .schedule-btn {
   background-color: #2ecc71;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
 }
 
 .schedule-btn:hover {
@@ -187,6 +207,12 @@
 
 .rate-btn {
   background-color: #3498db;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
 }
 
 .rate-btn:hover {

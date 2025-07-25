@@ -7,7 +7,8 @@ function CreateSessionModal({
   onSessionCreated,
   onSessionUpdated,
   existingSession = null,
-  preselectedAttendee
+  preselectedAttendee,
+  initialDateTime = null
 }) {
   const { dbUser } = useAuth();
   const isEditMode = !!existingSession;
@@ -44,15 +45,43 @@ function CreateSessionModal({
         attendees: attendeesString,
         includeConference: hasConference
       };
-    } else {
+    } else if (initialDateTime) {
+      const startDateTime = initialDateTime.start;
+      const endDateTime = initialDateTime.end;
+
+      const startDate = startDateTime.toISOString().split('T')[0];
+      const startTime = startDateTime.toTimeString().substring(0, 5);
+      const endDate = endDateTime.toISOString().split('T')[0];
+      const endTime = endDateTime.toTimeString().substring(0, 5);
+
       return {
         summary: '',
         description: '',
         location: '',
-        startDate: '',
-        startTime: '',
-        endDate: '',
-        endTime: '',
+        startDate,
+        startTime,
+        endDate,
+        endTime,
+        attendees: preselectedAttendee || '',
+        includeConference: true
+      };
+    } else {
+      const now = new Date();
+      const oneHourLater = new Date(now.getTime() + 60 * 60 * 1000);
+
+      const startDate = now.toISOString().split('T')[0];
+      const startTime = now.toTimeString().substring(0, 5);
+      const endDate = oneHourLater.toISOString().split('T')[0];
+      const endTime = oneHourLater.toTimeString().substring(0, 5);
+
+      return {
+        summary: '',
+        description: '',
+        location: '',
+        startDate,
+        startTime,
+        endDate,
+        endTime,
         attendees: preselectedAttendee || '',
         includeConference: true
       };

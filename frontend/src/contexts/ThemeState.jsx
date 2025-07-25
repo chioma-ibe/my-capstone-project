@@ -7,21 +7,18 @@ export function useTheme() {
 }
 
 export function ThemeProvider({ children }) {
-  // Check if user has a theme preference in localStorage
   const getInitialTheme = () => {
     const savedTheme = localStorage.getItem('theme');
-    return savedTheme || 'dark'; // Default to dark theme
+    return savedTheme || 'dark';
   };
 
   const [theme, setTheme] = useState(getInitialTheme);
 
-  // Update localStorage and document body when theme changes
   useEffect(() => {
     localStorage.setItem('theme', theme);
     document.body.setAttribute('data-theme', theme);
   }, [theme]);
 
-  // Toggle between light and dark themes
   const toggleTheme = () => {
     setTheme(prevTheme => (prevTheme === 'dark' ? 'light' : 'dark'));
   };
