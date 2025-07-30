@@ -54,6 +54,13 @@ function Navbar() {
           <div className="auth-links">
             {currentUser ? (
               <div className="user-info">
+                {currentUser.photoURL && (
+                  <img
+                    src={currentUser.photoURL}
+                    alt="Profile"
+                    className="profile-photo"
+                  />
+                )}
                 <span className="user-email">{currentUser.email}</span>
                 <button onClick={handleLogout} className="logout-btn">
                   Logout

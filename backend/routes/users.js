@@ -520,6 +520,28 @@ router.get('/ratings/:userId/:partnerId', async (req, res) => {
   }
 });
 
+router.put('/update/:userId', async (req, res) => {
+  try {
+    const userId = parseInt(req.params.userId);
+    const { bio, name, profilePhoto } = req.body;
+
+    const updateData = {};
+    if (bio !== undefined) updateData.bio = bio;
+    if (name !== undefined) updateData.name = name;
+    if (profilePhoto !== undefined) updateData.profilePhoto = profilePhoto;
+
+    const updatedUser = await prisma.user.update({
+      where: { id: userId },
+      data: updateData
+    });
+
+    res.json(updatedUser);
+  } catch (error) {
+    console.error('Error updating user:', error);
+    res.status(500).json({ error: 'Failed to update user information' });
+  }
+});
+
 router.post('/match-requests', async (req, res) => {
   try {
     const { senderId, receiverId } = req.body;

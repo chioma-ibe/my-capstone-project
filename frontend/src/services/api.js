@@ -115,6 +115,13 @@ class ApiService {
       body: { status },
     });
   }
+
+  async updateUser(userId, userData) {
+    return this.request(`/users/update/${userId}`, {
+      method: 'PUT',
+      body: userData,
+    });
+  }
 }
 
 export default new ApiService();

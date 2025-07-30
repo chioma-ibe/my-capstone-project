@@ -28,12 +28,105 @@
   font-size: 1rem;
 }
 
-.profile-bio {
+.profile-bio-section {
   margin-bottom: 1.5rem;
-  color: var(--text-secondary);
   background-color: var(--bg-tertiary);
   padding: 1rem;
   border-radius: 8px;
+}
+
+.bio-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.bio-header h3 {
+  margin: 0;
+  color: var(--text-primary);
+}
+
+.bio-edit-btn {
+  background-color: var(--btn-primary);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 0.4rem 0.8rem;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.bio-edit-btn:hover {
+  background-color: var(--btn-primary-hover);
+}
+
+.profile-bio {
+  color: var(--text-secondary);
+  line-height: 1.5;
+  white-space: pre-wrap;
+}
+
+.profile-bio.empty {
+  color: var(--text-tertiary);
+  font-style: italic;
+}
+
+.bio-edit-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.bio-textarea {
+  width: 100%;
+  min-height: 120px;
+  padding: 0.8rem;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  resize: vertical;
+  font-family: inherit;
+  font-size: 1rem;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+.bio-actions {
+  display: flex;
+  gap: 0.8rem;
+  justify-content: flex-end;
+}
+
+.bio-save-btn, .bio-cancel-btn {
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.bio-save-btn {
+  background-color: var(--btn-primary);
+  color: white;
+  border: none;
+}
+
+.bio-save-btn:hover:not(:disabled) {
+  background-color: var(--btn-primary-hover);
+}
+
+.bio-cancel-btn {
+  background-color: transparent;
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+}
+
+.bio-cancel-btn:hover:not(:disabled) {
+  background-color: var(--bg-secondary);
+}
+
+.bio-save-btn:disabled, .bio-cancel-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .profile-preferences-actions {

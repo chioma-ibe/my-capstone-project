@@ -6,6 +6,7 @@ import RatingModal from '../components/RatingModal';
 import CreateSessionModal from '../components/calendar/CreateSessionModal';
 import StudyTimeBooking from '../components/StudyTimeBooking';
 import Spinner from '../components/spinner/Spinner';
+import StarRating from '../components/StarRating';
 import '../styles/pages/Matches.css';
 
 function Matches() {
@@ -161,9 +162,10 @@ function Matches() {
                 {matchRatings[match.id] && (
                   <div className="match-rating">
                     {matchRatings[match.id].averageScore > 0 ? (
-                      <span className="rating-display">
-                        ⭐ {matchRatings[match.id].averageScore} ({matchRatings[match.id].totalRatings} reviews)
-                      </span>
+                      <StarRating
+                        rating={matchRatings[match.id].averageScore}
+                        totalRatings={matchRatings[match.id].totalRatings}
+                      />
                     ) : (
                       <span className="no-rating">No ratings yet</span>
                     )}

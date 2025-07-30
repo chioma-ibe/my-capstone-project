@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import apiService from '../services/api';
 import Spinner from '../components/spinner/Spinner';
+import StarRating from '../components/StarRating';
 import '../styles/pages/Home.css';
 import { motion, useAnimation } from 'framer-motion';
 
@@ -204,12 +205,16 @@ function Home() {
             <h2>{currentPotentialMatch.name}</h2>
             <p className="user-bio">{currentPotentialMatch.bio}</p>
 
-            <p className="user-rating">
-              Rating: {currentPotentialMatch.averageRating > 0
-                ? `${currentPotentialMatch.averageRating}/5.0 (${currentPotentialMatch.totalRatings} reviews)`
-                : 'No ratings yet'
-              }
-            </p>
+            <div className="user-rating">
+              {currentPotentialMatch.averageRating > 0 ? (
+                <StarRating
+                  rating={currentPotentialMatch.averageRating}
+                  totalRatings={currentPotentialMatch.totalRatings}
+                />
+              ) : (
+                <span className="no-rating">No ratings yet</span>
+              )}
+            </div>
 
             <div className="user-courses">
               <h3>Shared Courses:</h3>
