@@ -1,10 +1,12 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import UserCourses from '../components/UserCourses';
 import CourseSelector from '../components/CourseSelector';
 import StudyPreferences from '../components/StudyPreferences';
 import Spinner from '../components/spinner/Spinner';
+import StarRating from '../components/StarRating';
 import apiService from '../services/api';
+import { CiEdit } from "react-icons/ci";
 import '../styles/pages/Profile.css';
 
 function Profile() {
@@ -13,6 +15,19 @@ function Profile() {
   const [isEditingBio, setIsEditingBio] = useState(false);
   const [bio, setBio] = useState('');
   const [isSaving, setIsSaving] = useState(false);
+  const [userRating, setUserRating] = useState({ averageScore: 0, totalRatings: 0 });
+
+  useEffect(() => {
+    if (dbUser?.id) {
+      apiService.getUserRatings(dbUser.id)
+        .then(data => {
+          setUserRating(data);
+        })
+        .catch(error => {
+          console.error('Error fetching user ratings:', error);
+        });
+    }
+  }, [dbUser?.id]);
 
   const handleCourseAdded = () => {
     setRefreshCourses(prev => !prev);
@@ -70,10 +85,23 @@ function Profile() {
   return (
     <div className="profile-container">
       <div className="profile-header">
+        <div className="profile-photo-container">
+          <img
+            src={currentUser.photoURL || "https://static.xx.fbcdn.net/rsrc.php/v1/yi/r/odA9sNLrE86.jpg"}
+            alt="Profile"
+            className="profile-large-photo"
+          />
+        </div>
         <div className="profile-info">
           <h1>{dbUser.name || currentUser.displayName || currentUser.email}</h1>
-          <p className="profile-email">{dbUser.email}</p>
+          <div className="profile-rating">
+            <StarRating rating={userRating.averageScore} totalRatings={userRating.totalRatings} />
+          </div>
+        </div>
+      </div>
 
+      <div className="profile-content">
+        <div className="top-section">
           <div className="profile-bio-section">
             {isEditingBio ? (
               <div className="bio-edit-container">
@@ -104,9 +132,11 @@ function Profile() {
               <div className="bio-display">
                 <div className="bio-header">
                   <h3>About Me</h3>
-                  <button onClick={handleEditBio} className="bio-edit-btn">
-                    {dbUser.bio ? 'Edit' : 'Add Bio'}
-                  </button>
+                  <CiEdit
+                    onClick={handleEditBio}
+                    className="bio-edit-icon"
+                    title={dbUser.bio ? 'Edit Bio' : 'Add Bio'}
+                  />
                 </div>
                 {dbUser.bio ? (
                   <p className="profile-bio">{dbUser.bio}</p>
@@ -116,22 +146,20 @@ function Profile() {
               </div>
             )}
           </div>
-        </div>
-      </div>
-
-      <div className="profile-content">
-        <div className="courses-section">
-          <div className="user-courses-container">
-            <UserCourses
-              userId={dbUser.id}
-              key={refreshCourses ? 'refresh' : 'normal'}
-            />
-          </div>
 
           <div className="course-selector-container">
             <CourseSelector
               userId={dbUser.id}
               onCourseAdded={handleCourseAdded}
+            />
+          </div>
+        </div>
+
+        <div className="courses-section">
+          <div className="user-courses-container">
+            <UserCourses
+              userId={dbUser.id}
+              key={refreshCourses ? 'refresh' : 'normal'}
             />
           </div>
         </div>

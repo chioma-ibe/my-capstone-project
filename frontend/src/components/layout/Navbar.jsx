@@ -54,14 +54,11 @@ function Navbar() {
           <div className="auth-links">
             {currentUser ? (
               <div className="user-info">
-                {currentUser.photoURL && (
-                  <img
-                    src={currentUser.photoURL}
-                    alt="Profile"
-                    className="profile-photo"
-                  />
-                )}
-                <span className="user-email">{currentUser.email}</span>
+                <img
+                  src={currentUser.photoURL || "https://static.xx.fbcdn.net/rsrc.php/v1/yi/r/odA9sNLrE86.jpg"}
+                  alt="Profile"
+                  className="profile-photo"
+                />
                 <button onClick={handleLogout} className="logout-btn">
                   Logout
                 </button>
