@@ -7,6 +7,9 @@ import CreateSessionModal from '../components/calendar/CreateSessionModal';
 import StudyTimeBooking from '../components/StudyTimeBooking';
 import Spinner from '../components/spinner/Spinner';
 import StarRating from '../components/StarRating';
+import Tooltip from '../components/Tooltip';
+import { MdOutlineSystemUpdateAlt } from "react-icons/md";
+import { FaRegCalendarAlt } from "react-icons/fa";
 import '../styles/pages/Matches.css';
 
 function Matches() {
@@ -151,27 +154,41 @@ function Matches() {
           <p>You don't have any matches yet. Add some courses to find study buddies!</p>
         </div>
       ) : (
-        <div className="matches-list">
+        <div className="matches-grid">
           {matches.map((match) => (
             <div key={match.id} className="match-card">
+              <div className="match-photo-container">
+                <img
+                  src={match.profilePhoto || "https://static.xx.fbcdn.net/rsrc.php/v1/yi/r/odA9sNLrE86.jpg"}
+                  alt={match.name}
+                  className="match-photo"
+                  onError={(e) => {
+                    e.target.onerror = null;
+                    e.target.src = "https://static.xx.fbcdn.net/rsrc.php/v1/yi/r/odA9sNLrE86.jpg";
+                  }}
+                />
+              </div>
               <div className="match-info">
                 <div className="match-header">
                   <h2>{match.name}</h2>
                 </div>
-                <p className="match-email">{match.email}</p>
-                {matchRatings[match.id] && (
-                  <div className="match-rating">
-                    {matchRatings[match.id].averageScore > 0 ? (
-                      <StarRating
-                        rating={matchRatings[match.id].averageScore}
-                        totalRatings={matchRatings[match.id].totalRatings}
-                      />
-                    ) : (
-                      <span className="no-rating">No ratings yet</span>
-                    )}
-                  </div>
-                )}
+                <div className="match-rating">
+                  <StarRating
+                    rating={matchRatings[match.id]?.averageScore || 0}
+                    totalRatings={matchRatings[match.id]?.totalRatings || 0}
+                  />
+                </div>
 
+                <div className="match-courses-preview">
+                  {match.sharedCourses && match.sharedCourses.length > 0 ? (
+                    <p>{match.sharedCourses.length} shared {match.sharedCourses.length === 1 ? 'course' : 'courses'}</p>
+                  ) : (
+                    <p>No shared courses</p>
+                  )}
+                </div>
+              </div>
+
+              <div className="match-overlay">
                 <div className="match-details">
                   <p className="match-date">Matched on: {match.matchedAt}</p>
                   <div className="match-courses">
@@ -189,23 +206,32 @@ function Matches() {
                     )}
                   </div>
                 </div>
-              </div>
-              <div className="match-actions">
-                <button
-                  className="book-best-times-btn"
-                  onClick={() => handleBookBestTimes(match)}
-                >
-                  Book Best Times
-                </button>
-                <button
-                  className="schedule-btn"
-                  onClick={() => handleScheduleSession(match)}
-                >
-                  Schedule Any Time
-                </button>
-                <button className="rate-btn" onClick={() => handleRatePartner(match)}>
-                  {userRatings[match.id] ? 'Update Rating' : 'Rate Study Partner'}
-                </button>
+                <div className="match-actions">
+                  <button
+                    className="book-best-times-btn"
+                    onClick={() => handleBookBestTimes(match)}
+                  >
+                    Book Best Times
+                  </button>
+                  <div className="icon-buttons">
+                    <Tooltip text="Manually schedule session" position="top">
+                      <button
+                        className="icon-btn schedule-icon-btn"
+                        onClick={() => handleScheduleSession(match)}
+                      >
+                        <FaRegCalendarAlt />
+                      </button>
+                    </Tooltip>
+                    <Tooltip text={userRatings[match.id] ? 'Update rating' : 'Rate study partner'} position="top">
+                      <button
+                        className="icon-btn rate-icon-btn"
+                        onClick={() => handleRatePartner(match)}
+                      >
+                        <MdOutlineSystemUpdateAlt />
+                      </button>
+                    </Tooltip>
+                  </div>
+                </div>
               </div>
             </div>
           ))}

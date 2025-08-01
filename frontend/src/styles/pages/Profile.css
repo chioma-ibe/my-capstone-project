@@ -9,6 +9,21 @@
 .profile-header {
   display: flex;
   margin-bottom: 2rem;
+  align-items: center;
+  gap: 2rem;
+}
+
+.profile-photo-container {
+  flex-shrink: 0;
+}
+
+.profile-large-photo {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid var(--border-color);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
 .profile-info {
@@ -22,10 +37,9 @@
   padding-bottom: 0.5rem;
 }
 
-.profile-email {
-  color: var(--text-secondary);
-  margin-bottom: 1rem;
-  font-size: 1rem;
+.profile-rating {
+  margin-top: 0.5rem;
+  font-size: 1.2rem;
 }
 
 .profile-bio-section {
@@ -47,18 +61,16 @@
   color: var(--text-primary);
 }
 
-.bio-edit-btn {
-  background-color: var(--btn-primary);
-  color: white;
-  border: none;
-  border-radius: 4px;
-  padding: 0.4rem 0.8rem;
+.bio-edit-icon {
+  color: var(--btn-primary);
   cursor: pointer;
-  font-size: 0.9rem;
+  font-size: 1.5rem;
+  transition: transform 0.2s ease, color 0.2s ease;
 }
 
-.bio-edit-btn:hover {
-  background-color: var(--btn-primary-hover);
+.bio-edit-icon:hover {
+  color: var(--btn-primary-hover);
+  transform: scale(1.1);
 }
 
 .profile-bio {
@@ -161,10 +173,36 @@
   background-color: #27ae60;
 }
 
-.courses-section {
+.top-section {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 2rem;
+  margin-bottom: 2rem;
+}
+
+.profile-bio-section,
+.course-selector-container {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.profile-bio-section .bio-display,
+.course-selector-container .course-selector {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.bio-display {
+  height: 100%;
+}
+
+.profile-bio {
+  flex: 1;
+}
+
+.courses-section {
   margin-bottom: 2rem;
 }
 
@@ -189,8 +227,14 @@
 }
 
 @media (max-width: 768px) {
-  .courses-section {
+  .top-section {
     grid-template-columns: 1fr;
+  }
+
+  .profile-header {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
   }
 }
 

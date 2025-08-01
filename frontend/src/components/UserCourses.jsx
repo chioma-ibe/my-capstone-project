@@ -1,6 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import apiService from '../services/api';
 import Spinner from './spinner/Spinner';
+import { CiEdit } from "react-icons/ci";
+import { IoTrashOutline } from "react-icons/io5";
 import '../styles/components/UserCourses.css';
 
 const getProficiencyLabel = (level) => {
@@ -28,7 +31,6 @@ function UserCourses({ userId }) {
         setError(null);
       } catch (err) {
         setError('Failed to load your courses');
-        console.error('Error fetching user courses:', err);
       } finally {
         setLoading(false);
       }
@@ -64,7 +66,6 @@ function UserCourses({ userId }) {
       setError(null);
     } catch (err) {
       setError('Failed to remove course');
-      console.error('Error removing course:', err);
     }
   };
 
@@ -86,7 +87,6 @@ function UserCourses({ userId }) {
       setError(null);
     } catch (err) {
       setError('Failed to update proficiency');
-      console.error('Error updating proficiency:', err);
     } finally {
       setUpdatingProficiency(false);
     }
@@ -99,57 +99,80 @@ function UserCourses({ userId }) {
   return (
     <div className="user-courses">
       <h2>My Courses</h2>
-      <div className="courses-list">
-        {userCourses.map((userCourse) => (
-          <div key={userCourse.id} className="course-item">
-            <div className="course-info">
-              <h3>{userCourse.course.name}</h3>
-              {editingCourseId !== userCourse.courseId && (
-                <button
-                  className="edit-proficiency-btn"
-                  onClick={() => handleEditProficiency(userCourse.courseId, userCourse.proficiency)}
-                >
-                  Edit Proficiency
-                </button>
-              )}
-              <p>Proficiency: {getProficiencyLabel(userCourse.proficiency)}</p>
-              {editingCourseId === userCourse.courseId && (
-                <div className="proficiency-editor" ref={proficiencyMenuRef}>
-                  <select
-                    value={selectedProficiency}
-                    onChange={(e) => setSelectedProficiency(Number(e.target.value))}
-                    disabled={updatingProficiency}
-                  >
-                    <option value={1}>1 - Novice</option>
-                    <option value={2}>2 - Basic</option>
-                    <option value={3}>3 - Intermediate</option>
-                    <option value={4}>4 - Advanced</option>
-                    <option value={5}>5 - Expert</option>
-                  </select>
-                  <button
-                    onClick={() => handleUpdateProficiency(userCourse.courseId)}
-                    disabled={updatingProficiency}
-                  >
-                    {updatingProficiency ? 'Saving...' : 'Save'}
-                  </button>
-                  <button onClick={() => setEditingCourseId(null)}>
-                    Cancel
-                  </button>
-                </div>
-              )}
-              {userCourse.course.description && (
-                <p className="course-description">{userCourse.course.description}</p>
-              )}
-            </div>
-            <button
-              className="remove-course-btn"
-              onClick={() => handleRemoveCourse(userCourse.courseId)}
+      <AnimatePresence>
+        <div className="courses-grid">
+          {userCourses.map((userCourse) => (
+            <motion.div
+              key={userCourse.id}
+              layout
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.8 }}
+              transition={{
+                type: "spring",
+                stiffness: 300,
+                damping: 30,
+                layout: { duration: 0.3 }
+              }}
+              className="course-card"
             >
-              Remove
-            </button>
-          </div>
-        ))}
-      </div>
+              <div className="course-content">
+                <div className="course-info">
+                  <h3>{userCourse.course.name}</h3>
+                  <div className="proficiency-display">
+                    <p>Proficiency: {getProficiencyLabel(userCourse.proficiency)}</p>
+                    {editingCourseId !== userCourse.courseId && (
+                      <CiEdit
+                        className="edit-proficiency-icon"
+                        onClick={() => handleEditProficiency(userCourse.courseId, userCourse.proficiency)}
+                        title="Edit Proficiency"
+                      />
+                    )}
+                  </div>
+                  {editingCourseId === userCourse.courseId && (
+                    <div className="proficiency-editor" ref={proficiencyMenuRef}>
+                      <select
+                        value={selectedProficiency}
+                        onChange={(e) => setSelectedProficiency(Number(e.target.value))}
+                        disabled={updatingProficiency}
+                      >
+                        <option value={1}>1 - Novice</option>
+                        <option value={2}>2 - Basic</option>
+                        <option value={3}>3 - Intermediate</option>
+                        <option value={4}>4 - Advanced</option>
+                        <option value={5}>5 - Expert</option>
+                      </select>
+                      <button
+                        onClick={() => handleUpdateProficiency(userCourse.courseId)}
+                        disabled={updatingProficiency}
+                      >
+                        {updatingProficiency ? 'Saving...' : 'Save'}
+                      </button>
+                      <button onClick={() => setEditingCourseId(null)}>
+                        Cancel
+                      </button>
+                    </div>
+                  )}
+                  {userCourse.course.description && (
+                    <p className="course-description">{userCourse.course.description}</p>
+                  )}
+                </div>
+                <motion.div
+                  className="remove-course-container"
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                >
+                  <IoTrashOutline
+                    className="remove-course-icon"
+                    onClick={() => handleRemoveCourse(userCourse.courseId)}
+                    title="Remove Course"
+                  />
+                </motion.div>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+      </AnimatePresence>
     </div>
   );
 }
